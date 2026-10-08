@@ -1,0 +1,28 @@
+BioSample,title,source_name,tissue,sex,strain,mouse id number,experiment group,treatment,library strategy,mouse id_number
+SAMN30602309,Cerebellum Male 3mo 29ID,Cerebellum,Cerebellum,male,C57BL/6JN,29,,,,
+SAMN30602306,Cerebellum Male 18mo 31ID,Cerebellum,Cerebellum,male,C57BL/6JN,31,,,,
+SAMN30602305,Cerebellum Male 21mo 32ID,Cerebellum,Cerebellum,male,C57BL/6JN,32,,,,
+SAMN30602304,Cerebellum Male 3mo 33ID,Cerebellum,Cerebellum,male,C57BL/6JN,33,,,,
+SAMN30602302,Cerebellum Male 18mo 35ID,Cerebellum,Cerebellum,male,C57BL/6JN,35,,,,
+SAMN30602301,Cerebellum Male 21mo 36ID,Cerebellum,Cerebellum,male,C57BL/6JN,36,,,,
+SAMN30602300,Cerebellum Female 3mo 37ID,Cerebellum,Cerebellum,female,C57BL/6JN,37,,,,
+SAMN30602298,Cerebellum Female 18mo 39ID,Cerebellum,Cerebellum,female,C57BL/6JN,39,,,,
+SAMN30602297,Cerebellum Female 21mo 40ID,Cerebellum,Cerebellum,female,C57BL/6JN,40,,,,
+SAMN30602296,Cerebellum Female 3mo 41ID,Cerebellum,Cerebellum,female,C57BL/6JN,41,,,,
+SAMN30602294,Cerebellum Female 18mo 43ID,Cerebellum,Cerebellum,female,C57BL/6JN,43,,,,
+SAMN30602293,Cerebellum Female 21mo 44ID,Cerebellum,Cerebellum,female,C57BL/6JN,44,,,,
+SAMN33827180,Cerebellum Female 19mo aDR 61ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,aDR,Unstranded mRNA-seq,61
+SAMN33827179,Cerebellum Female 19mo aDR 62ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,aDR,Unstranded mRNA-seq,62
+SAMN33827178,Cerebellum Female 19mo AL 63ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,AL,Unstranded mRNA-seq,63
+SAMN33827177,Cerebellum Female 19mo aDR 64ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,aDR,Unstranded mRNA-seq,64
+SAMN33827176,Cerebellum Female 19mo aDR 65ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,aDR,Unstranded mRNA-seq,65
+SAMN33827175,Cerebellum Female 19mo AL 66ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,AL,Unstranded mRNA-seq,66
+SAMN33827174,Cerebellum Female 19mo aDR 67ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,aDR,Unstranded mRNA-seq,67
+SAMN33827173,Cerebellum Female 19mo AL 68ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,AL,Unstranded mRNA-seq,68
+SAMN33827172,Cerebellum Female 19mo AL 69ID,Cerebellum,Cerebellum,female,C57BL/6JN,,Dietary Intervention,AL,Unstranded mRNA-seq,69
+SAMN33827051,Cerebellum Male 19mo PBS 72ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,PBS,Unstranded mRNA-seq,72
+SAMN33827050,Cerebellum Male 19mo YMP 73ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,YMP,Unstranded mRNA-seq,73
+SAMN33827049,Cerebellum Male 19mo YMP 77ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,YMP,Unstranded mRNA-seq,77
+SAMN33827048,Cerebellum Male 19mo PBS 80ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,PBS,Unstranded mRNA-seq,80
+SAMN33827047,Cerebellum Male 19mo YMP 81ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,YMP,Unstranded mRNA-seq,81
+SAMN33827046,Cerebellum Male 19mo PBS 84ID,Cerebellum,Cerebellum,male,C57BL/6JN,,Young Plasma Injection,PBS,Unstranded mRNA-seq,84
