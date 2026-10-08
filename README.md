@@ -41,7 +41,7 @@ explore_rnaseq.ipynb
 
 ## Reproduce
 ```bash
-cd ~/Desktop/RNAseq_tutorial/RNAseq_aging
+cd ~/Desktop/RNAseq_aging
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # metadata: NCBI runinfo + BioSample efetch (see commands in the session; outputs saved in metadata/)
 .venv/bin/python scripts/make_notebook.py
