@@ -10,3 +10,6 @@ results/logs/
 results/qc/multiqc_raw.html
 results/qc/multiqc_raw_data/
 results/qc/raw/
+results/star/*.tar.gz
+results/star/mapping/
+results/star/qc/

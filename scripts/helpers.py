@@ -248,3 +248,27 @@ def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
             f = json.load(open(fj))
             rows[s] |= {"q30_%": 100 * f["summary"]["after_filtering"]["q30_rate"], "dup_%": 100 * f["duplication"]["rate"]}
     return pd.DataFrame(rows).T.round(1).join(runs["group"])
+
+
+# ---- STAR results copied back from Euler ----------------------------------------------------
+STAR = ROOT / "results/star"
+
+
+def load_star(runs: pd.DataFrame, root: Path = STAR):
+    """Parse results/star/mapping/<SRR>/{ReadsPerGene.out.tab,Log.final.out} (from euler/04_collect.sh).
+    Returns (counts genes x runs [unstranded column], qc table with mapping rates and a strandedness check)."""
+    import re
+    counts, qc = {}, {}
+    for s in runs.index:
+        d = root / "mapping" / s
+        t = pd.read_csv(d / "ReadsPerGene.out.tab", sep="\t", header=None, index_col=0)
+        g = t.iloc[4:]                                      # first 4 rows are N_unmapped / multimapping / noFeature / ambiguous
+        counts[s] = g[1]                                    # col 1 = unstranded (Smart-seq2 libraries are unstranded)
+        log = (d / "Log.final.out").read_text()
+        pick = lambda key: float(re.search(rf"{re.escape(key)}\s*\|\s*([\d.]+)", log).group(1))
+        qc[s] = {"input_pairs_M": pick("Number of input reads") / 1e6,
+                 "unique_%": pick("Uniquely mapped reads %"),
+                 "multi_%": pick("% of reads mapped to multiple loci"),
+                 "assigned_to_gene_%": 100 * g[1].sum() / (pick("Number of input reads")),
+                 "frac_read1_same_strand": g[2].sum() / (g[2].sum() + g[3].sum())}   # ~0.5 = unstranded
+    return pd.DataFrame(counts).astype(int), pd.DataFrame(qc).T.round(2).join(runs["group"])

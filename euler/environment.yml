@@ -1,0 +1,8 @@
+name: rnaseq_star
+channels: [conda-forge, bioconda]
+dependencies:
+  - sra-tools=3.1     # Tutorial: pin 3.1 to avoid prefetch/fasterq-dump version conflicts
+  - star
+  - fastp
+  - samtools
+  - rsem              # optional: transcript/isoform-level quantification from TranscriptomeSAM

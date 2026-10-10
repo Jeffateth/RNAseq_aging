@@ -29,9 +29,11 @@ subset_txi <- function(txi, srr) {
   txi
 }
 
-#' DESeq2 dataset for a subset of samples; genes need >= 10 counts in >= min_n samples.
-make_dds <- function(txi, samples, design, min_n) {
-  dds <- DESeqDataSetFromTximport(subset_txi(txi, rownames(samples)), samples, design)
+#' DESeq2 dataset for a subset of samples from a tximport list (kallisto) or a gene x sample count matrix (STAR);
+#' genes need >= 10 counts in >= min_n samples.
+make_dds <- function(x, samples, design, min_n) {
+  dds <- if (is.matrix(x)) DESeqDataSetFromMatrix(round(x[, rownames(samples)]), samples, design)
+         else DESeqDataSetFromTximport(subset_txi(x, rownames(samples)), samples, design)
   dds <- dds[rowSums(counts(dds) >= 10) >= min_n, ]
   DESeq(dds, quiet = TRUE)
 }
@@ -75,4 +77,47 @@ volcano <- function(res, title, alpha = 0.05, n_label = 12) {
   ggplot(d, aes(log2FoldChange, -log10(padj), color = sig, label = lab)) + geom_point(size = 0.8, alpha = 0.6) +
     geom_text_repel(data = filter(d, !is.na(lab)), size = 3, max.overlaps = 30, show.legend = FALSE) + scale_color_manual(values = c("grey60", "firebrick")) +
     labs(title = title, color = paste0("padj < ", alpha))
+}
+
+#' The four analyses of notebook 03 for either count source: aging 18v3 / 21v3 (sex covariate; `exclude` samples dropped),
+#' aDR vs AL, YMP vs PBS. Returns a named list of tidy result tables.
+run_de <- function(x, samples, genes, exclude = "SRR21355389") {
+  grp <- function(g) samples %>% filter(group %in% g) %>% mutate(group = droplevels(group))
+  s_age <- samples %>% filter(cohort == "aging", !rownames(.) %in% exclude) %>% mutate(group = droplevels(group))
+  d_age <- make_dds(x, s_age, ~ sex + group, min_n = 3)
+  d_adr <- make_dds(x, grp(c("AL", "aDR")), ~ group, min_n = 4)
+  d_ymp <- make_dds(x, grp(c("PBS", "YMP")), ~ group, min_n = 3)
+  list(aging_18v3 = de_table(d_age, c("group", "aging 18mo", "aging 3mo"), genes),
+       aging_21v3 = de_table(d_age, c("group", "aging 21mo", "aging 3mo"), genes),
+       aDR = de_table(d_adr, c("group", "aDR", "AL"), genes),
+       YMP = de_table(d_ymp, c("group", "YMP", "PBS"), genes))
+}
+
+#' STAR GeneCounts matrix saved by notebook 04 (genes x runs, GENCODE vM25 versioned gene ids = kallisto's).
+load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstranded.csv.gz")) {
+  m <- read_csv(path, show_col_types = FALSE) %>% column_to_rownames(colnames(.)[1]) %>% as.matrix()
+  storage.mode(m) <- "integer"; m
+}
+
+#' Agreement of two result tables for one contrast (a = kallisto, b = STAR, by convention).
+compare_contrast <- function(a, b, alpha = 0.05) {
+  j <- inner_join(a, b, by = "gene_id", suffix = c("_a", "_b")) %>% filter(!is.na(padj_a), !is.na(padj_b))
+  sa <- j$padj_a < alpha; sb <- j$padj_b < alpha; sig <- sa | sb
+  tibble(genes_tested = nrow(j), DEG_kallisto = sum(sa), DEG_star = sum(sb), shared = sum(sa & sb),
+         jaccard = round(sum(sa & sb) / max(sum(sig), 1), 2),
+         same_direction = round(mean(sign(j$log2FoldChange_a[sa & sb]) == sign(j$log2FoldChange_b[sa & sb])), 3),
+         lfc_spearman_all = round(cor(j$log2FoldChange_a, j$log2FoldChange_b, method = "spearman"), 3),
+         lfc_spearman_sig = round(cor(j$log2FoldChange_a[sig], j$log2FoldChange_b[sig], method = "spearman"), 3))
+}
+
+lfc_scatter <- function(a, b, title, alpha = 0.05) {
+  j <- inner_join(a, b, by = "gene_id", suffix = c("_k", "_s")) %>% filter(!is.na(padj_k), !is.na(padj_s)) %>%
+    mutate(call = case_when(padj_k < alpha & padj_s < alpha ~ "both", padj_k < alpha ~ "kallisto only",
+                            padj_s < alpha ~ "STAR only", TRUE ~ "neither"),
+           lab = if_else(call != "neither" & (abs(log2FoldChange_k - log2FoldChange_s) > 1), symbol_k, NA_character_))
+  ggplot(j, aes(log2FoldChange_k, log2FoldChange_s, color = call)) + geom_abline(color = "grey50") +
+    geom_point(data = filter(j, call == "neither"), size = 0.4, alpha = 0.3) + geom_point(data = filter(j, call != "neither"), size = 1) +
+    geom_text_repel(data = filter(j, !is.na(lab)), aes(label = lab), size = 3, show.legend = FALSE, max.overlaps = 20) +
+    scale_color_manual(values = c(both = "firebrick", `kallisto only` = "steelblue", `STAR only` = "darkorange", neither = "grey70")) +
+    labs(title = title, x = "log2FC kallisto", y = "log2FC STAR")
 }
