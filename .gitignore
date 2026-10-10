@@ -1,4 +1,12 @@
-.venv/
-raw_data/
-processed_data/
+*.pyc
 .DS_Store
+.pixi/
+__pycache__/
+processed_data/
+raw_data/
+reference/
+results/kallisto/
+results/logs/
+results/qc/multiqc_raw.html
+results/qc/multiqc_raw_data/
+results/qc/raw/

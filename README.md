@@ -12,14 +12,15 @@ No metadata is missing for the fields below. Age is not a structured field in Bi
 
 ## Layout
 ```
-metadata/      srr_list.txt, runinfo_raw.csv, biosample_raw.csv (as fetched),
-               sra_metadata.csv, download_size_report.csv, sra_metadata_with_group.csv
-processed_data/ GSE212336/, GSE227689/ (GEO count tables, unmodified, see SOURCES.txt),
-               cerebellum_counts_27runs.csv.gz (derived)
-raw_data/      empty until you run the download scripts
-scripts/       download_sra.sh, convert_fastq.sh, make_notebook.py
-results/       figures from the notebook
-explore_rnaseq.ipynb
+notebooks/     01_acquire_data (prefetch)  02_quantify_kallisto (FastQC, fastp, kallisto)  03_differential_expression (R, DESeq2)
+scripts/       helpers.py  (idempotent Python pipeline functions)      R/helpers.R  (R functions)
+metadata/      srr_list.txt, runinfo_raw.csv, biosample_raw.csv, sra_metadata*.csv, GSE212336_series_matrix.txt.gz
+processed_data/ GEO count tables (unmodified, see SOURCES.txt) + cerebellum_counts_27runs.csv.gz
+raw_data/      .sra (kept), temporary FASTQ (deleted after quantification)   [git-ignored]
+reference/     GENCODE vM25 transcriptome + annotation, kallisto index       [git-ignored]
+results/       qc/ (FastQC, MultiQC, fastp), kallisto/ (git-ignored), de/ (DESeq2 tables per contrast), figures
+explore_rnaseq.ipynb   first look at the GEO count tables
+pixi.toml      environment (kallisto, fastp, R/Bioconductor, Jupyter)
 ```
 
 ## Storage estimate (raw data – NOT downloaded)
@@ -41,18 +42,7 @@ explore_rnaseq.ipynb
 
 ## Reproduce
 ```bash
-cd ~/Desktop/RNAseq_aging
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-# metadata: NCBI runinfo + BioSample efetch (see commands in the session; outputs saved in metadata/)
-.venv/bin/python scripts/make_notebook.py
-.venv/bin/jupyter nbconvert --to notebook --execute --inplace explore_rnaseq.ipynb
+pixi install                 # environment (kallisto, fastp, DESeq2, ...); needs Homebrew sra-tools for prefetch
+pixi run jupyter lab         # then run notebooks/01, 02, 03 in order (03 uses the R kernel; start Jupyter/VS Code kernels from the pixi env)
 ```
-
-## Raw data (optional, only on your approval)
-```bash
-brew install sratoolkit                       # already installed (3.4.1)
-scripts/download_sra.sh SRR21355398           # test with one run (~0.7 GB)
-scripts/convert_fastq.sh SRR21355398          # optional FASTQ conversion
-scripts/download_sra.sh --all --yes           # all 27 (~50 GB); refuses without --yes
-```
-Scripts only accept the 27 selected runs, never overwrite existing files, and never modify `.sra` files.
+Raw reads are processed locally with kallisto; only STAR (genome index ≈ 30 GB RAM) would need Euler.
