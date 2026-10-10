@@ -11,7 +11,7 @@ set -euo pipefail
 source "${REPO:-$HOME/RNAseq_aging}/euler/common.sh"
 srr=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$REPO/metadata/srr_list.txt")
 out="$MAP/$srr"
-[[ -s "$out/ReadsPerGene.out.tab" ]] && { echo "$srr done"; exit 0; }
+[[ -s "$out/Log.final.out" ]] && { echo "$srr done"; exit 0; }
 mkdir -p "$out" "$TMP/$srr"; fq="$TMP/$srr"
 
 fasterq-dump "$SRA/$srr/$srr.sra" --split-3 --threads 8 --temp "$fq" --outdir "$fq"

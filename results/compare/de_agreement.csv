@@ -1,0 +1,5 @@
+contrast,total_DEG_kallisto,total_DEG_star,genes_tested_both,DEG_kallisto,DEG_star,shared,jaccard,same_direction,lfc_spearman_all,lfc_spearman_sig
+aging_18v3,140,150,14846,124,149,93,0.52,1,0.8,0.903
+aging_21v3,131,174,16086,122,174,96,0.48,1,0.785,0.956
+aDR,142,196,13595,139,196,91,0.37,1,0.831,0.928
+YMP,38,23,13176,29,23,19,0.58,1,0.85,0.86

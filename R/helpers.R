@@ -103,7 +103,8 @@ load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstran
 compare_contrast <- function(a, b, alpha = 0.05) {
   j <- inner_join(a, b, by = "gene_id", suffix = c("_a", "_b")) %>% filter(!is.na(padj_a), !is.na(padj_b))
   sa <- j$padj_a < alpha; sb <- j$padj_b < alpha; sig <- sa | sb
-  tibble(genes_tested = nrow(j), DEG_kallisto = sum(sa), DEG_star = sum(sb), shared = sum(sa & sb),
+  tibble(total_DEG_kallisto = sum(a$padj < alpha, na.rm = TRUE), total_DEG_star = sum(b$padj < alpha, na.rm = TRUE),   # all DEGs, as in the table above
+         genes_tested_both = nrow(j), DEG_kallisto = sum(sa), DEG_star = sum(sb), shared = sum(sa & sb),   # restricted to genes tested by both
          jaccard = round(sum(sa & sb) / max(sum(sig), 1), 2),
          same_direction = round(mean(sign(j$log2FoldChange_a[sa & sb]) == sign(j$log2FoldChange_b[sa & sb])), 3),
          lfc_spearman_all = round(cor(j$log2FoldChange_a, j$log2FoldChange_b, method = "spearman"), 3),

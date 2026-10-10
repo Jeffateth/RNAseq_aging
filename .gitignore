@@ -5,6 +5,7 @@ __pycache__/
 processed_data/
 raw_data/
 reference/
+results/compare/star_*.csv
 results/kallisto/
 results/logs/
 results/qc/multiqc_raw.html
