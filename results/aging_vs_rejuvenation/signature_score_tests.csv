@@ -1,0 +1,5 @@
+method,treated,control,n_t,n_c,diff,t_test_p
+kallisto,aDR,AL,5,4,0.68,0.0051
+kallisto,YMP,PBS,3,3,-0.797,0.0076
+STAR,aDR,AL,5,4,0.777,0.016
+STAR,YMP,PBS,3,3,-0.777,0.034

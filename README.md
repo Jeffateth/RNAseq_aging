@@ -14,13 +14,14 @@ No metadata is missing for the fields below. Age is not a structured field in Bi
 ```
 notebooks/     01_acquire_data  02_quantify_kallisto (FastQC, fastp, kallisto)  03_differential_expression (R, DESeq2)
                04_star_euler (STAR on Euler, load results)  05_compare_kallisto_star (R)
+               06_aging_vs_rejuvenation (R: overlap, signature score, GSEA; kallisto + STAR)
 euler/         SLURM scripts for the STAR route (setup, download, index, mapping array, collect)
 scripts/       helpers.py  (idempotent Python pipeline functions)      R/helpers.R  (R functions)
 metadata/      srr_list.txt, runinfo_raw.csv, biosample_raw.csv, sra_metadata*.csv, GSE212336_series_matrix.txt.gz
 processed_data/ GEO count tables (unmodified, see SOURCES.txt) + cerebellum_counts_27runs.csv.gz
 raw_data/      .sra (kept), temporary FASTQ (deleted after quantification)   [git-ignored]
 reference/     GENCODE vM25 transcriptome + annotation, kallisto index       [git-ignored]
-results/       qc/ (FastQC, MultiQC, fastp), kallisto/ (git-ignored), de/ (DESeq2 per contrast), star/ (counts + QC from Euler), compare/
+results/       qc/ (FastQC, MultiQC, fastp), kallisto/ (git-ignored), de/ (DESeq2 per contrast), star/ (counts + QC from Euler), compare/, aging_vs_rejuvenation/
 explore_rnaseq.ipynb   first look at the GEO count tables
 pixi.toml      environment (kallisto, fastp, R/Bioconductor, Jupyter)
 ```
@@ -45,6 +46,6 @@ pixi.toml      environment (kallisto, fastp, R/Bioconductor, Jupyter)
 ## Reproduce
 ```bash
 pixi install                 # environment (kallisto, fastp, DESeq2, ...); needs Homebrew sra-tools for prefetch
-pixi run jupyter lab         # then run notebooks/01, 02, 03 in order (03 uses the R kernel; start Jupyter/VS Code kernels from the pixi env)
+pixi run jupyter lab         # then run notebooks/01 → 06 in order (03 uses the R kernel; start Jupyter/VS Code kernels from the pixi env)
 ```
 Raw reads are processed locally with kallisto. STAR (genome index ≈ 30 GB RAM) runs on Euler via `euler/` (see notebook 04); notebook 05 compares the two methods.

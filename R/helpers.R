@@ -79,19 +79,25 @@ volcano <- function(res, title, alpha = 0.05, n_label = 12) {
     labs(title = title, color = paste0("padj < ", alpha))
 }
 
-#' The four analyses of notebook 03 for either count source: aging 18v3 / 21v3 (sex covariate; `exclude` samples dropped),
-#' aDR vs AL, YMP vs PBS. Returns a named list of tidy result tables.
-run_de <- function(x, samples, genes, exclude = "SRR21355389") {
+#' DESeq2 datasets behind the four analyses: aging cohort (`exclude` samples dropped), aDR vs AL pair, YMP vs PBS pair.
+run_dds <- function(x, samples, exclude = "SRR21355389") {
   grp <- function(g) samples %>% filter(group %in% g) %>% mutate(group = droplevels(group))
   s_age <- samples %>% filter(cohort == "aging", !rownames(.) %in% exclude) %>% mutate(group = droplevels(group))
-  d_age <- make_dds(x, s_age, ~ sex + group, min_n = 3)
-  d_adr <- make_dds(x, grp(c("AL", "aDR")), ~ group, min_n = 4)
-  d_ymp <- make_dds(x, grp(c("PBS", "YMP")), ~ group, min_n = 3)
-  list(aging_18v3 = de_table(d_age, c("group", "aging 18mo", "aging 3mo"), genes),
-       aging_21v3 = de_table(d_age, c("group", "aging 21mo", "aging 3mo"), genes),
-       aDR = de_table(d_adr, c("group", "aDR", "AL"), genes),
-       YMP = de_table(d_ymp, c("group", "YMP", "PBS"), genes))
+  list(aging = make_dds(x, s_age, ~ sex + group, min_n = 3),
+       aDR = make_dds(x, grp(c("AL", "aDR")), ~ group, min_n = 4),
+       YMP = make_dds(x, grp(c("PBS", "YMP")), ~ group, min_n = 3))
 }
+
+#' The four analyses of notebook 03 for either count source: aging 18v3 / 21v3 (sex covariate), aDR vs AL, YMP vs PBS.
+#' Returns a named list of tidy result tables.
+run_de <- function(x, samples, genes, exclude = "SRR21355389") de_tables(run_dds(x, samples, exclude), genes)
+
+#' The four result tables from the datasets of run_dds().
+de_tables <- function(d, genes) list(
+  aging_18v3 = de_table(d$aging, c("group", "aging 18mo", "aging 3mo"), genes),
+  aging_21v3 = de_table(d$aging, c("group", "aging 21mo", "aging 3mo"), genes),
+  aDR = de_table(d$aDR, c("group", "aDR", "AL"), genes),
+  YMP = de_table(d$YMP, c("group", "YMP", "PBS"), genes))
 
 #' STAR GeneCounts matrix saved by notebook 04 (genes x runs, GENCODE vM25 versioned gene ids = kallisto's).
 load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstranded.csv.gz")) {
@@ -121,4 +127,96 @@ lfc_scatter <- function(a, b, title, alpha = 0.05) {
     geom_text_repel(data = filter(j, !is.na(lab)), aes(label = lab), size = 3, show.legend = FALSE, max.overlaps = 20) +
     scale_color_manual(values = c(both = "firebrick", `kallisto only` = "steelblue", `STAR only` = "darkorange", neither = "grey70")) +
     labs(title = title, x = "log2FC kallisto", y = "log2FC STAR")
+}
+
+# ---- aging vs rejuvenation ------------------------------------------------------------------
+#' Overlap of an intervention's DEGs with the aging DEGs (genes tested in both): counts by direction, enrichment, log2FC agreement.
+#' "reversal" = opposite sign to aging (rejuvenating); "same" = same sign (aging-like).
+overlap_with_aging <- function(aging, interv, alpha = 0.05) {
+  j <- inner_join(aging, interv, by = "gene_id", suffix = c("_age", "_int")) %>% filter(!is.na(padj_age), !is.na(padj_int))
+  a <- j$padj_age < alpha; i <- j$padj_int < alpha; same <- sign(j$log2FoldChange_age) == sign(j$log2FoldChange_int)
+  ft <- fisher.test(table(factor(a, c(FALSE, TRUE)), factor(i, c(FALSE, TRUE))), alternative = "greater")
+  tibble(genes = nrow(j), aging_DEG = sum(a), intervention_DEG = sum(i), shared = sum(a & i),
+         expected_by_chance = round(sum(a) * sum(i) / nrow(j), 1), shared_reversal = sum(a & i & !same), shared_same = sum(a & i & same),
+         fisher_p = signif(ft$p.value, 2),
+         lfc_spearman_all = round(cor(j$log2FoldChange_age, j$log2FoldChange_int, method = "spearman"), 3),
+         lfc_spearman_agingDEG = round(cor(j$log2FoldChange_age[a], j$log2FoldChange_int[a], method = "spearman"), 3))
+}
+
+#' Per-sample signature score: z-score each gene across the samples of `dds`, then mean(up genes) - mean(down genes).
+signature_score <- function(dds, up, down) {
+  z <- t(scale(t(assay(vst(dds, blind = TRUE))))); ids <- rownames(z)
+  m <- \(g) colMeans(z[intersect(g, ids), , drop = FALSE])
+  tibble(srr = colnames(z), group = as.character(colData(dds)$group), score = m(up) - m(down))
+}
+
+#' Treated - control difference in score with a Welch t-test (small n: treat p-values as indicative).
+score_test <- function(sc, treated, control) {
+  x <- sc$score[sc$group == treated]; y <- sc$score[sc$group == control]
+  tibble(treated = treated, control = control, n_t = length(x), n_c = length(y), diff = round(mean(x) - mean(y), 3),
+         t_test_p = signif(t.test(x, y)$p.value, 2))
+}
+
+#' MSigDB mouse gene sets as named lists of gene symbols: Hallmark (50) and GO biological process.
+msigdb_sets <- function() {
+  to_list <- \(d) split(d$gene_symbol, d$gs_name)
+  suppressMessages(list(hallmark = to_list(msigdbr::msigdbr(species = "Mus musculus", collection = "H")),
+                        gobp = to_list(msigdbr::msigdbr(species = "Mus musculus", collection = "C5", subcollection = "GO:BP"))))
+}
+
+#' fgsea on the DESeq2 Wald statistic (one value per gene symbol).
+run_gsea <- function(res, sets, seed = 1) {
+  st <- res %>% filter(!is.na(stat), !is.na(symbol), symbol != "") %>% group_by(symbol) %>% slice_max(abs(stat), n = 1, with_ties = FALSE) %>% ungroup()
+  set.seed(seed)
+  withCallingHandlers(fgsea::fgsea(sets, setNames(st$stat, st$symbol), minSize = 15, maxSize = 500),
+                      warning = \(w) if (grepl("ties in the preranked", conditionMessage(w))) invokeRestart("muffleWarning")) %>%   # ~0.1 % tied stats: harmless
+    as_tibble() %>% select(-leadingEdge)
+}
+
+#' Intervention log2FC against aging log2FC (genes tested in both); negative slope among aging DEGs = reversal.
+lfc_vs_aging_plot <- function(aging, interv, title, alpha = 0.05) {
+  j <- inner_join(aging, interv, by = "gene_id", suffix = c("_age", "_int")) %>% filter(!is.na(padj_age), !is.na(padj_int)) %>%
+    mutate(call = case_when(padj_age < alpha & padj_int < alpha ~ "both", padj_age < alpha ~ "aging only",
+                            padj_int < alpha ~ "intervention only", TRUE ~ "neither"))
+  a <- j$padj_age < alpha
+  ggplot(j, aes(log2FoldChange_age, log2FoldChange_int, color = call)) +
+    geom_hline(yintercept = 0, color = "grey85") + geom_vline(xintercept = 0, color = "grey85") +
+    geom_point(data = filter(j, call == "neither"), size = 0.4, alpha = 0.3) + geom_point(data = filter(j, call != "neither"), size = 1.3) +
+    scale_color_manual(values = c(both = "firebrick", `aging only` = "steelblue", `intervention only` = "darkorange", neither = "grey70")) +
+    labs(title = title, subtitle = sprintf("Spearman among aging DEGs = %.2f", cor(j$log2FoldChange_age[a], j$log2FoldChange_int[a], method = "spearman")),
+         x = "log2FC aging (21 vs 3 mo)", y = "log2FC intervention")
+}
+
+#' Per-sample signature scores for the three datasets (list with aging / aDR / YMP data frames from signature_score()).
+score_plot <- function(sc) {
+  d <- bind_rows(aging = sc$aging, aDR = sc$aDR, YMP = sc$YMP, .id = "panel") %>%
+    mutate(group = factor(group, c("aging 3mo", "aging 18mo", "aging 21mo", "AL", "aDR", "PBS", "YMP")))
+  ggplot(d, aes(group, score, color = group)) + geom_boxplot(outlier.shape = NA, fill = NA) + geom_jitter(width = 0.1, size = 2) +
+    facet_wrap(~ panel, scales = "free_x") + theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1)) + labs(x = NULL, y = "aging-signature score")
+}
+
+#' Hallmark (or other) NES tiles for aging vs the interventions; * = padj < 0.05; only sets significant in at least one contrast.
+nes_tiles <- function(g, alpha = 0.05) {
+  d <- bind_rows(g, .id = "contrast") %>% mutate(pathway = sub("^HALLMARK_", "", pathway))
+  keep <- unique(d$pathway[d$padj < alpha]); ord <- d %>% filter(contrast == "aging_21v3") %>% arrange(NES) %>% pull(pathway)
+  d <- d %>% filter(pathway %in% keep) %>% mutate(pathway = factor(pathway, ord), contrast = factor(contrast, c("aging_21v3", "aDR", "YMP")))
+  ggplot(d, aes(contrast, pathway, fill = NES)) + geom_tile(color = "white") + geom_text(aes(label = ifelse(padj < alpha, "*", "")), size = 5) +
+    scale_fill_gradient2(low = "#2166ac", mid = "white", high = "#b2182b") + labs(x = NULL, y = NULL)
+}
+
+#' Pathways significant in aging: how many does each intervention reverse (opposite NES sign) or mimic (same sign), both padj < alpha.
+gsea_concordance <- function(g, alpha = 0.05) {
+  bind_rows(lapply(c("aDR", "YMP"), \(n) {
+    j <- inner_join(g$aging_21v3 %>% select(pathway, NES_age = NES, padj_age = padj), g[[n]] %>% select(pathway, NES, padj), by = "pathway")
+    s <- filter(j, padj_age < alpha)
+    tibble(intervention = n, aging_sets = nrow(s), significant_in_both = sum(s$padj < alpha),
+           reversed = sum(s$padj < alpha & sign(s$NES) != sign(s$NES_age)), same_direction = sum(s$padj < alpha & sign(s$NES) == sign(s$NES_age)),
+           NES_spearman_all_sets = round(cor(j$NES_age, j$NES, method = "spearman"), 2))
+  }))
+}
+
+#' log2FC / padj of named genes in the aging and intervention contrasts.
+gene_table <- function(res, symbols) {
+  pick <- \(r, tag) r %>% filter(symbol %in% symbols) %>% transmute(symbol, !!paste0("lfc_", tag) := round(log2FoldChange, 2), !!paste0("padj_", tag) := signif(padj, 2))
+  Reduce(\(a, b) left_join(a, b, by = "symbol"), list(pick(res$aging_21v3, "aging"), pick(res$aDR, "aDR"), pick(res$YMP, "YMP")))
 }
