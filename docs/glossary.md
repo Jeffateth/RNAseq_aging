@@ -42,6 +42,7 @@ Terms are grouped by where they appear in the workflow. Abbreviations are spelle
 |---|---|
 | **QC** | quality control |
 | **FastQC / MultiQC** | per-sample quality report / one report combining all samples |
+| **Insert** | the part of a sequenced fragment that comes from the sample (a piece of a transcript, as cDNA), between the two adapters. Reads longer than the insert run on into the adapter |
 | **Adapter** | synthetic sequence attached to fragments; read into when the fragment is shorter than the read length, so it must be removed (here: Nextera transposase sequence, `CTGTCTCTTATACACATCT…`); fastp cuts from the adapter to the read end |
 | **Trimming (fastp)** | removing adapters and low-quality ends from reads; fastp also filters low-quality reads |
 | **Poly-G** | run of G's at a read's end: the NovaSeq has no dye for G, so "no signal" (past the end of a molecule) is called G, with high quality. Mostly behind the adapter (cut with it); fastp's `--trim_poly_g` removes the rest |

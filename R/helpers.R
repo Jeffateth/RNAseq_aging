@@ -3,7 +3,7 @@
 # Contents (functions grouped by purpose)
 #   Load data ........ load_samples, load_txi, subset_txi, load_star_counts
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables, run_de
-#   Explore .......... pca_plot, outlier_genes, volcano
+#   Explore .......... pca_plot, outlier_genes
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (kallisto vs STAR; outlier sensitivity)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
 #                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
@@ -80,13 +80,6 @@ compare_de <- function(a, b, alpha = 0.05) {
   sig <- j$padj_a < alpha | j$padj_b < alpha
   tibble(DEG_a = sum(j$padj_a < alpha), DEG_b = sum(j$padj_b < alpha), DEG_both = sum(j$padj_a < alpha & j$padj_b < alpha),
          lfc_spearman = cor(j$log2FoldChange_a[sig], j$log2FoldChange_b[sig], method = "spearman"))
-}
-
-volcano <- function(res, title, alpha = 0.05, n_label = 12) {
-  d <- res %>% filter(!is.na(padj)) %>% mutate(sig = padj < alpha, lab = if_else(row_number() <= n_label & sig, symbol, NA_character_))
-  ggplot(d, aes(log2FoldChange, -log10(padj), color = sig, label = lab)) + geom_point(size = 0.8, alpha = 0.6) +
-    geom_text_repel(data = filter(d, !is.na(lab)), size = 3, max.overlaps = 30, show.legend = FALSE) + scale_color_manual(values = c("grey60", "firebrick")) +
-    labs(title = title, color = paste0("padj < ", alpha))
 }
 
 #' DESeq2 datasets behind the four analyses: aging cohort (`exclude` samples dropped), aDR vs AL pair, YMP vs PBS pair.

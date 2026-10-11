@@ -54,7 +54,7 @@ Notebook 01 needs an ETH account and the VPN ([euler/README.md](euler/README.md)
 | File | Content |
 |---|---|
 | [docs/data.md](docs/data.md) | what the data are: study, design, samples, identifiers |
-| [docs/pipeline.md](docs/pipeline.md) | the pipeline step by step, with the decision and alternatives at each step, plus reproducibility |
+| [docs/pipeline.md](docs/pipeline.md) | the pipeline step by step, with the decision and alternatives at each step |
 | [docs/glossary.md](docs/glossary.md) | terms and abbreviations |
 | [results/README.md](results/README.md) | how to read the result tables (columns, direction, significance) |
 | [euler/README.md](euler/README.md) | the cluster scripts |
