@@ -1,4 +1,12 @@
-"""Helpers for the RNA-seq preprocessing notebooks. Every step is idempotent: finished work is skipped."""
+"""Python helpers for notebooks 00, 01 and 02. Every pipeline step is idempotent: finished work is skipped.
+
+Contents
+  Setup and paths ..... ROOT, SRA, FASTQ, QC, KALLISTO, STAR ...; load_runs() reads metadata/samples.csv
+  Download ............ download_all (prefetch with progress bar), validate_all, status
+  QC and trimming ..... fastq (.sra -> FASTQ), fastqc, multiqc, fastqc_summary, trim (fastp)
+  Quantification ...... build_index, quant (kallisto), process (one run end to end), check_consistent, qc_summary
+  Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
+Terms: docs/glossary.md."""
 import os
 import shutil
 import subprocess
@@ -22,7 +30,7 @@ for d in (SRA, FASTQ, TMP, QC, KALLISTO, LOGS):
 
 def load_runs() -> pd.DataFrame:
     """The 27 assigned runs with age/sex/group, indexed by SRR."""
-    return pd.read_csv(ROOT / "metadata/sra_metadata_with_group.csv").set_index("SRR")
+    return pd.read_csv(ROOT / "metadata/samples.csv").set_index("SRR")
 
 
 def sh(cmd: str, log: str) -> None:
@@ -88,7 +96,7 @@ def download_all(runs: pd.DataFrame):
     """prefetch every missing .sra (resumes partial files, validates) with a live progress bar in GB.
     Logs: results/logs/<SRR>.log. Safe to interrupt and re-run."""
     from tqdm.auto import tqdm
-    exp = pd.read_csv(ROOT / "metadata/download_size_report.csv").set_index("SRR")["sra_size_MB"] / 1e3 * 1.06  # est. + ~6 % real overhead
+    exp = runs["sra_size_MB"] / 1e3 * 1.048576      # NCBI lists size_MB in MiB; x1.048576 converts to decimal GB (files on disk match)
     todo = [s for s in runs.index if not has_sra(s)]
     if not todo:
         return print(f"all {len(runs)} runs present")
@@ -176,7 +184,7 @@ def fastqc_summary(srrs, modules=KEY_MODULES) -> pd.DataFrame:
                 with zipfile.ZipFile(z) as zf:
                     txt = zf.read(f"{s}_{m}_fastqc/summary.txt").decode()
                 rows[f"{s}_{m}"] = {l.split("\t")[1]: l.split("\t")[0] for l in txt.splitlines()}
-    return pd.DataFrame(rows).T[modules]
+    return pd.DataFrame(rows).T[modules] if rows else pd.DataFrame(columns=modules)
 
 
 @timed("trim")
@@ -187,8 +195,61 @@ def trim(srr):
         return "skip"
     fastq(srr)
     sh(f"fastp -i {FASTQ}/{srr}_1.fastq -I {FASTQ}/{srr}_2.fastq -o {out1} -O {out2} "
-       f"--detect_adapter_for_pe --length_required 20 --thread 6 "
+       f"--detect_adapter_for_pe --trim_poly_g --length_required 20 --thread 6 "
        f"--json {QC}/{srr}.fastp.json --html {QC}/{srr}.fastp.html", srr)
+
+
+# adapters fastp detected (Nextera transposase end, the Tn5 library prep): mate 1 / mate 2 share the first 19 bases
+NEXTERA = {1: "CTGTCTCTTATACACATCTCCGAGCCCACGAGAC", 2: "CTGTCTCTTATACACATCTGACGCTGCCGACGA"}
+
+
+def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFrame:
+    """Evidence that what fastp cuts is the library adapter, and what happens to poly-G tails (first n_pairs read pairs).
+    Per mate: share of reads with the adapter's first 12 bases (and how many are expected by chance), whether the bases after
+    them continue this mate's own adapter, and the fate of reads with >= 12 G in a row after adapter trimming ALONE (no --trim_poly_g, unlike trim()): this shows what
+    the adapter cut leaves behind, the reason poly-G trimming is switched on in the pipeline."""
+    tmp = TMP / f"adcheck_{srr}"
+    tmp.mkdir(exist_ok=True)
+    sh(f"fastq-dump -X {n_pairs} --split-files -O {tmp} {SRA / srr / (srr + '.sra')}", srr)
+    sh(f"fastp -i {tmp}/{srr}_1.fastq -I {tmp}/{srr}_2.fastq -o {tmp}/t_1.fq -O {tmp}/t_2.fq "
+       f"--detect_adapter_for_pe --length_required 20 --thread 8 --json /dev/null --html /dev/null", srr)
+
+    def read(fn):
+        out = {}
+        with open(fn) as f:
+            for name in f:
+                seq = f.readline().rstrip(); f.readline(); f.readline()
+                out[name.split()[0]] = seq
+        return out
+
+    mism = lambda a, b: sum(x != y for x, y in zip(a, b))
+    G, rows = "G" * polyg_len, []
+    for m in (1, 2):
+        raw, kept = read(f"{tmp}/{srr}_{m}.fastq"), read(f"{tmp}/t_{m}.fq")
+        own, other = NEXTERA[m], NEXTERA[3 - m]
+        motif = own[:motif_len]
+        hit = [n for n, q in raw.items() if motif in q]
+        cls = {"own": 0, "other": 0, "neither": 0}
+        for n in hit:
+            q = raw[n]; i = q.find(motif); tail = q[i + 19:i + 33]     # the two mates' adapters are identical for 19 bases, then differ
+            if len(tail) < 8:
+                continue
+            a, b = mism(tail, own[19:19 + len(tail)]), mism(tail, other[19:19 + len(tail)])
+            cls["own" if a <= 1 < b else "other" if b <= 1 < a else "neither"] += 1
+        pg = [n for n, q in raw.items() if G in q]
+        after_ad = [n for n in pg if motif in raw[n] and raw[n].index(motif) < raw[n].index(G)]
+        dropped = sum(n not in kept for n in pg)
+        still = sum(n in kept and G in kept[n] for n in pg)
+        pct = lambda x, d: round(100 * x / max(d, 1), 1)
+        rows.append({"mate": m, "reads": len(raw), "adapter_start_%": pct(len(hit), len(raw)),
+                     "expected_by_chance_reads": round(len(raw) * (150 - motif_len + 1) / 4 ** motif_len, 1),
+                     "continues_own_adapter_%": pct(cls["own"], sum(cls.values())),
+                     "matches_other_mate_adapter_%": pct(cls["other"], sum(cls.values())),
+                     "polyG_reads_%": pct(len(pg), len(raw)), "polyG_after_adapter_%": pct(len(after_ad), len(pg)),
+                     "polyG_dropped_%": pct(dropped, len(pg)), "polyG_removed_%": pct(len(pg) - dropped - still, len(pg)),
+                     "polyG_remaining_%": pct(still, len(pg))})
+    shutil.rmtree(tmp)
+    return pd.DataFrame(rows).set_index("mate")
 
 
 @timed("kallisto")
@@ -247,10 +308,32 @@ def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
         if fj.is_file():
             f = json.load(open(fj))
             rows[s] |= {"q30_%": 100 * f["summary"]["after_filtering"]["q30_rate"], "dup_%": 100 * f["duplication"]["rate"]}
+    if not rows:
+        return pd.DataFrame(columns=["pairs_M", "aligned_%", "group"])
     return pd.DataFrame(rows).T.round(1).join(runs["group"])
 
 
-# ---- STAR results copied back from Euler ----------------------------------------------------
+# ---- results copied back from Euler ----------------------------------------------------------
+EULER = ROOT / "results/euler"      # put the tarballs from euler/04_collect.sh here (git-ignored)
+
+
+def unpack_euler(src: Path = EULER):
+    """Unpack the tarballs from euler/04_collect.sh: kallisto_results and qc_results into results/ (-> results/kallisto, results/qc),
+    star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
+    import tarfile
+    targets = {"kallisto_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star"}
+    for name, dest in targets.items():
+        f = next((p for p in (src / name, ROOT / "results/star" / name) if p.is_file()), None)    # star tarball may sit in results/star/
+        if f is None:
+            print(f"not found: {name}")
+            continue
+        dest.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(f) as t:
+            t.extractall(dest, filter="data")
+        print(f"unpacked {name} -> {dest.relative_to(ROOT)}")
+
+
+# ---- STAR counts and mapping statistics (from the unpacked Euler results) ----------------------------------------------------
 STAR = ROOT / "results/star"
 
 
@@ -271,4 +354,8 @@ def load_star(runs: pd.DataFrame, root: Path = STAR):
                  "multi_%": pick("% of reads mapped to multiple loci"),
                  "assigned_to_gene_%": 100 * g[1].sum() / (pick("Number of input reads")),
                  "frac_read1_same_strand": g[2].sum() / (g[2].sum() + g[3].sum())}   # ~0.5 = unstranded
-    return pd.DataFrame(counts).astype(int), pd.DataFrame(qc).T.round(2).join(runs["group"])
+    counts = pd.DataFrame(counts).astype(int)
+    counts.index.name = "gene_id"
+    qc = pd.DataFrame(qc).T.round(2).join(runs["group"])
+    qc.index.name = "SRR"
+    return counts, qc

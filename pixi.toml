@@ -1,35 +1,33 @@
+# Software environment (install with `pixi install`; locked versions in pixi.lock). Terms: docs/glossary.md
 [workspace]
 name = "rnaseq-aging"
 channels = ["conda-forge", "bioconda"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64"]            # Apple-silicon Mac; add "linux-64" / "osx-64" to use another machine
 
 [dependencies]
-kallisto = "*"
-fastqc = "*"
-fastp = "*"
-multiqc = "*"
-r-base = "4.4.*"
-r-tidyverse = "*"
-r-ggrepel = "*"
-r-gplots = "*"
-r-viridis = "*"
-r-msigdbr = "*"
-r-pbapply = "*"
-bioconductor-deseq2 = "*"
-bioconductor-tximport = "*"
-bioconductor-rhdf5 = "*"
-bioconductor-fgsea = "*"
-bioconductor-clusterprofiler = "*"
-"bioconductor-org.mm.eg.db" = "*"
-bioconductor-biomart = "*"
-bioconductor-genomeinfodbdata = "*"
-bioconductor-sva = "*"
+# Read processing (notebook 02)
+kallisto = "*"                       # transcript quantification
+fastqc = "*"                         # read quality report
+multiqc = "*"                        # combines the FastQC reports
+fastp = "*"                          # adapter and quality trimming
+
+# Python side (notebooks 00, 02, 01; scripts/helpers.py)
 python = "3.12.*"
 pandas = "*"
-tqdm = "*"
-ipywidgets = "*"
 numpy = "*"
-matplotlib = "*"
+tqdm = "*"                           # progress bars
+ipywidgets = "*"                     # renders the progress bars in notebooks
 jupyterlab = "*"
-nbconvert = "*"
-r-irkernel = "*"
+nbconvert = "*"                      # run notebooks from the command line
+
+# R side (notebooks 03, 04, 05; R/helpers.R)
+r-base = "4.4.*"
+r-irkernel = "*"                     # lets Jupyter / VS Code run R notebooks
+r-tidyverse = "*"                    # data frames and plots (dplyr, ggplot2, ...)
+r-ggrepel = "*"                      # non-overlapping plot labels
+bioconductor-deseq2 = "*"            # differential expression
+bioconductor-tximport = "*"          # transcript estimates -> gene counts
+bioconductor-rhdf5 = "*"             # lets tximport read kallisto's .h5 files
+bioconductor-genomeinfodbdata = "*"  # data package DESeq2 needs
+bioconductor-fgsea = "*"             # gene set enrichment analysis
+r-msigdbr = "*"                      # MSigDB gene sets (Hallmark, GO)

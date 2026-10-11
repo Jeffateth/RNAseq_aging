@@ -1,51 +1,72 @@
-# RNAseq_aging – mouse cerebellum bulk RNA-seq (Hahn et al., Cell 2023)
+# Mouse cerebellum: aging and rejuvenation (RNA-seq)
 
-Local, reproducible exploration of 27 SRA runs from two BioProjects. All 27 runs are **cerebellum**, paired-end, Illumina NovaSeq 6000, bulk mRNA-seq (BioSample/SRA metadata, verified per run).
+**Question.** Dietary restriction (aDR) and young blood plasma (YMP) are reported to rejuvenate the aged mouse brain. In the cerebellum, do they push gene expression back towards the young state, and how does that relate to the gene changes of normal aging?
 
-| BioProject | GEO | Design | Runs | Raw size |
+**Data.** 27 bulk RNA-seq samples (one mouse each) from Hahn *et al.*, *Cell* 2023: 12 aging mice (3, 18, 21 months) and 15 mice of a 19-month rejuvenation experiment. Raw reads are re-processed from scratch ([docs/data.md](docs/data.md)).
+
+**Approach.** reads → quality control and trimming → gene counts by two independent methods (kallisto, STAR) → differential expression with DESeq2 → comparison of treatment effects with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
+
+## Main results (cerebellum)
+The direction of every result is the same with both counting methods (kallisto numbers shown).
+
+| | aDR vs AL (9 females) | YMP vs PBS (6 males) |
+|---|---|---|
+| Differentially expressed genes (DEGs) | 142 (65 up, 77 down) | 38 (19 up, 19 down) |
+| DEGs shared with aging (21 vs 3 months: 131 DEGs, 123 testable here) | 7 (1.1 expected by chance); 6 move **like aging**, 1 opposite | 3 (0.2 expected); all **opposite** to aging |
+| log2 fold-change correlation with aging, among aging DEGs | **+0.42** (aging-like) | **−0.38** (reversal) |
+| Aging-signature score, treated minus control | **+0.68** (p = 0.005) | **−0.80** (p = 0.008) |
+| Pathways significant in aging and in the treatment (Hallmark) | 8: 5 reversed, 3 same | 12: **11 reversed**, 1 same |
+
+- **Young plasma reverses part of the cerebellar aging signal:** interferon-response pathways (up in aging) go down; mTORC1, fatty-acid and cholesterol metabolism, p53, hypoxia and oxidative phosphorylation (down in aging) go up.
+- **Dietary restriction does not:** it induces the circadian-clock genes the paper reports (19 of 23 up; Cry1, Dbp, Ciart, Cirbp) and reverses some pathways, but not the interferon response, and its aging-signature score rises.
+- **Limits:** 3–5 mice per group; treatments at 19 months vs aging at 21; aDR female-only, YMP male-only; p-values are indicative.
+
+## Workflow
+Run the notebooks in numerical order. The heavy steps (QC, trimming, kallisto, STAR) run on the Euler cluster, so notebook 01 comes first.
+```
+NCBI SRA --> .sra --> FASTQ --> FastQC, fastp --> kallisto --+   QC, trimming, kallisto and STAR
+ (27 runs)       \---------> fastp --> STAR ----------------+   run on the Euler cluster (01)
+                                                            v
+        02 QC/trimming decisions --> 03 DESeq2 per cohort --> 04 kallisto vs STAR --> 05 aging vs rejuvenation
+```
+
+| # | Notebook | Kernel | Does | Time |
 |---|---|---|---|---|
-| PRJNA875066 | GSE212336 | Aging: 3 / 18 / 21 mo, 2M + 2F per age | 12 | 19.8 GB |
-| PRJNA946653 | GSE227689 | 19 mo rejuvenation: aDR (5F) vs AL (4F); young plasma YMP (3M) vs PBS (3M) | 15 | 30.6 GB |
+| 00 | [acquire_data](notebooks/00_acquire_data.ipynb) | Python | *optional:* downloads the 27 runs (~54 GB) to the laptop, for local runs and the adapter check (Euler downloads its own copy) | 30–60 min |
+| 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | **runs QC, trimming (adapter and poly-G), kallisto and STAR on the ETH cluster (Euler)**; copies the results back | STAR array ~2 h (kallisto/QC array not yet timed); the laptop stays idle |
+| 02 | [quantify_kallisto](notebooks/02_quantify_kallisto.ipynb) | Python | QC and trimming decisions, kallisto summary; **reads** the Euler results (set `RUN_LOCALLY = True` to run the steps on the laptop: hours) | minutes |
+| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP | 1 min |
+| 04 | [compare_kallisto_star](notebooks/04_compare_kallisto_star.ipynb) | R | agreement of the two methods | 3 min |
+| 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways | 4 min |
 
-BioProject membership was read from NCBI runinfo, not inferred from SRR prefixes (SRR21355* → PRJNA875066, SRR239144*/SRR239145* → PRJNA946653).
-No metadata is missing for the fields below. Age is not a structured field in BioSample; it is parsed from the sample title (e.g. "Cerebellum Male 18mo 31ID").
+STAR counts are in the repo (`results/star/counts_unstranded.csv.gz`), but kallisto output is not (650 MB): copy it back from Euler (01).
+
+## Run it
+```bash
+pixi install                              # kallisto, fastp, FastQC, R/Bioconductor, Jupyter (pixi.toml)
+pixi run R -e 'IRkernel::installspec()'   # once: makes the R kernel visible to VS Code / Jupyter
+pixi run jupyter lab                      # or open notebooks/ in VS Code; pick the kernel named in the table
+brew install sratoolkit                   # only for notebook 00 / local runs (prefetch, fasterq-dump)
+```
+Notebook 01 needs an ETH account and the VPN ([euler/README.md](euler/README.md)). Finished work is always skipped, so interrupted runs resume.
+
+## Documentation
+| File | Content |
+|---|---|
+| [docs/data.md](docs/data.md) | what the data are: study, design, samples, identifiers |
+| [docs/pipeline.md](docs/pipeline.md) | the pipeline step by step, with the decision and alternatives at each step, plus reproducibility |
+| [docs/glossary.md](docs/glossary.md) | terms and abbreviations |
+| [results/README.md](results/README.md) | how to read the result tables (columns, direction, significance) |
+| [euler/README.md](euler/README.md) | the cluster scripts |
+| [docs/Tutorial.md](docs/Tutorial.md) | the course tutorial the workflow follows (Z. He, ETH Zurich) |
 
 ## Layout
 ```
-notebooks/     01_acquire_data  02_quantify_kallisto (FastQC, fastp, kallisto)  03_differential_expression (R, DESeq2)
-               04_star_euler (STAR on Euler, load results)  05_compare_kallisto_star (R)
-               06_aging_vs_rejuvenation (R: overlap, signature score, GSEA; kallisto + STAR)
-euler/         SLURM scripts for the STAR route (setup, download, index, mapping array, collect)
-scripts/       helpers.py  (idempotent Python pipeline functions)      R/helpers.R  (R functions)
-metadata/      srr_list.txt, runinfo_raw.csv, biosample_raw.csv, sra_metadata*.csv, GSE212336_series_matrix.txt.gz
-processed_data/ GEO count tables (unmodified, see SOURCES.txt) + cerebellum_counts_27runs.csv.gz
-raw_data/      .sra (kept), temporary FASTQ (deleted after quantification)   [git-ignored]
-reference/     GENCODE vM25 transcriptome + annotation, kallisto index       [git-ignored]
-results/       qc/ (FastQC, MultiQC, fastp), kallisto/ (git-ignored), de/ (DESeq2 per contrast), star/ (counts + QC from Euler), compare/, aging_vs_rejuvenation/
-explore_rnaseq.ipynb   first look at the GEO count tables
-pixi.toml      environment (kallisto, fastp, R/Bioconductor, Jupyter)
+notebooks/   00–05, the analysis          scripts/  helpers.py (Python), build_metadata.py (sample table)
+R/helpers.R  R functions for 03, 04, 05   euler/    SLURM scripts for the cluster
+metadata/    sample table and NCBI source tables   results/  small outputs kept in git
+pixi.toml, pixi.lock   software environment
 ```
+Not in git (regenerated): `raw_data/` (reads), `reference/` (mouse genome and annotation), `results/kallisto/`, FastQC reports, STAR alignments. Local only and unused: `processed_data/` (the authors' GEO count tables).
 
-## Storage estimate (raw data – NOT downloaded)
-- Combined `.sra` download: **50.4 GB** (491 M read pairs). Estimated gz FASTQ: ~65 GB; `fasterq-dump` temp space ~7× the `.sra` of one run (max ≈ 22 GB, one run at a time).
-- Free disk: 128 GB. Downloading all raw data (~50 GB + ~65 GB FASTQ) would nearly fill it unless `.sra` files are deleted after conversion.
-- 16 GB RAM is fine for download/conversion; STAR mapping of a mouse genome needs ~30 GB for index generation, which is too much locally (use Euler, or kallisto).
-- **Raw reads are not needed for initial exploration**: GEO provides count tables (25 MB total).
-
-## Processed data
-- `GSE212336_BulkSeq_Counttable.txt.gz` (21,076 genes × 847 samples, 15 regions) 
-- `GSE227689_BulkSeqRejuvenation_Counttable.txt.gz` (21,076 × 238)
-- Columns are `BulkSeq_<region>_<mouseID>`; cerebellum = `cer`. Mouse IDs match `mouse_id` in `sra_metadata.csv`; all 27 matched.
-- Raw integer counts, no missing values, no duplicated genes.
-
-## Observations from the notebook
-- PC1 (31%) separates the two projects entirely: strong cohort/batch effect. Do not compare across projects.
-- Aging cohort: PC2 separates sex; one 21-mo female (SRR21355389, mouse 40) is a strong PC1 outlier; inspect before DE.
-- Group sizes are small (3–5 per group), so power is limited.
-
-## Reproduce
-```bash
-pixi install                 # environment (kallisto, fastp, DESeq2, ...); needs Homebrew sra-tools for prefetch
-pixi run jupyter lab         # then run notebooks/01 → 06 in order (03 uses the R kernel; start Jupyter/VS Code kernels from the pixi env)
-```
-Raw reads are processed locally with kallisto. STAR (genome index ≈ 30 GB RAM) runs on Euler via `euler/` (see notebook 04); notebook 05 compares the two methods.
+Paper: Hahn *et al.* 2023, *Cell* 186:4117 ([doi](https://doi.org/10.1016/j.cell.2023.07.027)); authors' code: github.com/OliInTheValley/SpatioTemporal_Analysis.

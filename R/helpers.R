@@ -1,11 +1,21 @@
-# Helpers for the differential-expression notebooks (run from notebooks/).
+# R helpers for notebooks 03, 04, 05 (run them from notebooks/; paths are relative to the repo root).
+#
+# Contents (functions grouped by purpose)
+#   Load data ........ load_samples, load_txi, subset_txi, load_star_counts
+#   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables, run_de
+#   Explore .......... pca_plot, outlier_genes, volcano
+#   Compare methods .. compare_de, compare_contrast, lfc_scatter          (kallisto vs STAR; outlier sensitivity)
+#   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
+#                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
+# Terms: docs/glossary.md. Conventions: `res` = DESeq2 results table (columns gene_id, baseMean, log2FoldChange, lfcSE, stat,
+# pvalue, padj, symbol); `x` = tximport list (kallisto) or gene x sample count matrix (STAR); `dds` = DESeq2 dataset.
 suppressPackageStartupMessages({library(tidyverse); library(tximport); library(DESeq2); library(ggrepel)})
 ROOT <- normalizePath("..")
 theme_set(theme_minimal(base_size = 12))
 
 #' The 27 runs with cohort / sex / age / group (factors ordered with the control first).
 load_samples <- function() {
-  read_csv(file.path(ROOT, "metadata/sra_metadata_with_group.csv"), show_col_types = FALSE) %>%
+  read_csv(file.path(ROOT, "metadata/samples.csv"), show_col_types = FALSE) %>%
     transmute(srr = SRR, mouse_id, sex, age = age_months, group,
               cohort = if_else(BioProject == "PRJNA875066", "aging", "rejuvenation")) %>%
     mutate(group = factor(group, levels = c("aging 3mo", "aging 18mo", "aging 21mo", "AL", "aDR", "PBS", "YMP")),
@@ -32,10 +42,10 @@ subset_txi <- function(txi, srr) {
 #' DESeq2 dataset for a subset of samples from a tximport list (kallisto) or a gene x sample count matrix (STAR);
 #' genes need >= 10 counts in >= min_n samples.
 make_dds <- function(x, samples, design, min_n) {
-  dds <- if (is.matrix(x)) DESeqDataSetFromMatrix(round(x[, rownames(samples)]), samples, design)
-         else DESeqDataSetFromTximport(subset_txi(x, rownames(samples)), samples, design)
+  dds <- suppressMessages(if (is.matrix(x)) DESeqDataSetFromMatrix(round(x[, rownames(samples)]), samples, design)
+                          else DESeqDataSetFromTximport(subset_txi(x, rownames(samples)), samples, design))
   dds <- dds[rowSums(counts(dds) >= 10) >= min_n, ]
-  DESeq(dds, quiet = TRUE)
+  suppressMessages(DESeq(dds, quiet = TRUE))
 }
 
 #' Tidy results for one contrast (c(factor, treated, control)), annotated with gene symbols.
@@ -47,8 +57,8 @@ de_table <- function(dds, contrast, genes) {
 n_deg <- function(res, alpha = 0.05) res %>% filter(padj < alpha) %>% summarise(up = sum(log2FoldChange > 0), down = sum(log2FoldChange < 0))
 
 pca_plot <- function(dds, color, shape = NULL) {
-  v <- vst(dds, blind = TRUE)
-  d <- plotPCA(v, intgroup = color, returnData = TRUE); pv <- round(100 * attr(d, "percentVar"))
+  v <- suppressMessages(vst(dds, blind = TRUE))
+  d <- suppressMessages(plotPCA(v, intgroup = color, returnData = TRUE)); pv <- round(100 * attr(d, "percentVar"))
   d[[color]] <- colData(v)[[color]]
   if (!is.null(shape)) d[[shape]] <- colData(v)[[shape]]
   ggplot(d, aes(PC1, PC2, color = .data[[color]])) +
@@ -59,7 +69,7 @@ pca_plot <- function(dds, color, shape = NULL) {
 
 #' Genes that most distinguish one sample from the rest (vst difference) - to diagnose an outlier.
 outlier_genes <- function(dds, sample, genes, n = 10) {
-  v <- assay(vst(dds, blind = TRUE))
+  v <- assay(suppressMessages(vst(dds, blind = TRUE)))
   tibble(gene_id = rownames(v), vst_diff = v[, sample] - rowMeans(v[, colnames(v) != sample])) %>%
     left_join(genes, by = "gene_id") %>% arrange(desc(abs(vst_diff))) %>% head(n) %>% select(symbol, vst_diff)
 }
@@ -99,7 +109,7 @@ de_tables <- function(d, genes) list(
   aDR = de_table(d$aDR, c("group", "aDR", "AL"), genes),
   YMP = de_table(d$YMP, c("group", "YMP", "PBS"), genes))
 
-#' STAR GeneCounts matrix saved by notebook 04 (genes x runs, GENCODE vM25 versioned gene ids = kallisto's).
+#' STAR GeneCounts matrix saved by notebook 01 (genes x runs, GENCODE vM25 versioned gene ids = kallisto's).
 load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstranded.csv.gz")) {
   m <- read_csv(path, show_col_types = FALSE) %>% column_to_rownames(colnames(.)[1]) %>% as.matrix()
   storage.mode(m) <- "integer"; m
@@ -145,7 +155,7 @@ overlap_with_aging <- function(aging, interv, alpha = 0.05) {
 
 #' Per-sample signature score: z-score each gene across the samples of `dds`, then mean(up genes) - mean(down genes).
 signature_score <- function(dds, up, down) {
-  z <- t(scale(t(assay(vst(dds, blind = TRUE))))); ids <- rownames(z)
+  z <- t(scale(t(assay(suppressMessages(vst(dds, blind = TRUE)))))); ids <- rownames(z)
   m <- \(g) colMeans(z[intersect(g, ids), , drop = FALSE])
   tibble(srr = colnames(z), group = as.character(colData(dds)$group), score = m(up) - m(down))
 }
