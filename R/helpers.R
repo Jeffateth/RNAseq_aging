@@ -1,14 +1,14 @@
 # R helpers for notebooks 03, 04, 05 (run them from notebooks/; paths are relative to the repo root).
 #
 # Contents (functions grouped by purpose)
-#   Load data ........ load_samples, load_txi, subset_txi, load_star_counts
+#   Load data ........ load_samples, load_txi (kallisto), load_rsem, load_star_counts, subset_txi
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables, run_de
 #   Explore .......... pca_plot, outlier_genes
-#   Compare methods .. compare_de, compare_contrast, lfc_scatter          (kallisto vs STAR; outlier sensitivity)
+#   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
 #                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
 # Terms: docs/glossary.md. Conventions: `res` = DESeq2 results table (columns gene_id, baseMean, log2FoldChange, lfcSE, stat,
-# pvalue, padj, symbol); `x` = tximport list (kallisto) or gene x sample count matrix (STAR); `dds` = DESeq2 dataset.
+# pvalue, padj, symbol); `x` = tximport list (kallisto, RSEM) or gene x sample count matrix (STAR); `dds` = DESeq2 dataset.
 suppressPackageStartupMessages({library(tidyverse); library(tximport); library(DESeq2); library(ggrepel)})
 ROOT <- normalizePath("..")
 theme_set(theme_minimal(base_size = 12))
@@ -34,6 +34,15 @@ load_txi <- function(srr) {
   list(txi = txi, genes = genes)
 }
 
+#' RSEM -> gene-level counts (tximport reads RSEM's gene results directly: expected counts, TPM, effective length).
+#' Genes whose effective length is 0 (not expressed) get length 1, as tximport requires lengths > 0.
+load_rsem <- function(srr, dir = file.path(ROOT, "results/rsem")) {
+  files <- setNames(file.path(dir, srr, paste0(srr, ".genes.results")), srr)
+  invisible(capture.output(txi <- suppressMessages(tximport(files, type = "rsem", txIn = FALSE, txOut = FALSE))))
+  txi$length[txi$length <= 0] <- 1
+  txi
+}
+
 subset_txi <- function(txi, srr) {
   txi[c("abundance", "counts", "length")] <- lapply(txi[c("abundance", "counts", "length")], \(m) m[, srr, drop = FALSE])
   txi
@@ -45,7 +54,8 @@ make_dds <- function(x, samples, design, min_n) {
   dds <- suppressMessages(if (is.matrix(x)) DESeqDataSetFromMatrix(round(x[, rownames(samples)]), samples, design)
                           else DESeqDataSetFromTximport(subset_txi(x, rownames(samples)), samples, design))
   dds <- dds[rowSums(counts(dds) >= 10) >= min_n, ]
-  suppressMessages(DESeq(dds, quiet = TRUE))
+  withCallingHandlers(suppressMessages(DESeq(dds, quiet = TRUE)),
+                      warning = \(w) if (grepl("design is ~ 1", conditionMessage(w))) invokeRestart("muffleWarning"))   # intercept-only model of the PCA is intended
 }
 
 #' Tidy results for one contrast (c(factor, treated, control)), annotated with gene symbols.
@@ -102,34 +112,35 @@ de_tables <- function(d, genes) list(
   aDR = de_table(d$aDR, c("group", "aDR", "AL"), genes),
   YMP = de_table(d$YMP, c("group", "YMP", "PBS"), genes))
 
-#' STAR GeneCounts matrix saved by notebook 01 (genes x runs, GENCODE vM25 versioned gene ids = kallisto's).
+#' STAR GeneCounts matrix saved by notebook 01 (genes x runs, GENCODE M39 versioned gene ids = kallisto's).
 load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstranded.csv.gz")) {
   m <- read_csv(path, show_col_types = FALSE) %>% column_to_rownames(colnames(.)[1]) %>% as.matrix()
   storage.mode(m) <- "integer"; m
 }
 
-#' Agreement of two result tables for one contrast (a = kallisto, b = STAR, by convention).
+#' Agreement of two result tables for one contrast (a, b = DE tables of two quantification methods).
 compare_contrast <- function(a, b, alpha = 0.05) {
   j <- inner_join(a, b, by = "gene_id", suffix = c("_a", "_b")) %>% filter(!is.na(padj_a), !is.na(padj_b))
   sa <- j$padj_a < alpha; sb <- j$padj_b < alpha; sig <- sa | sb
-  tibble(total_DEG_kallisto = sum(a$padj < alpha, na.rm = TRUE), total_DEG_star = sum(b$padj < alpha, na.rm = TRUE),   # all DEGs, as in the table above
-         genes_tested_both = nrow(j), DEG_kallisto = sum(sa), DEG_star = sum(sb), shared = sum(sa & sb),   # restricted to genes tested by both
+  tibble(total_DEG_a = sum(a$padj < alpha, na.rm = TRUE), total_DEG_b = sum(b$padj < alpha, na.rm = TRUE),   # all DEGs of each method
+         genes_tested_both = nrow(j), DEG_a = sum(sa), DEG_b = sum(sb), shared = sum(sa & sb),   # restricted to genes tested by both
          jaccard = round(sum(sa & sb) / max(sum(sig), 1), 2),
          same_direction = round(mean(sign(j$log2FoldChange_a[sa & sb]) == sign(j$log2FoldChange_b[sa & sb])), 3),
          lfc_spearman_all = round(cor(j$log2FoldChange_a, j$log2FoldChange_b, method = "spearman"), 3),
          lfc_spearman_sig = round(cor(j$log2FoldChange_a[sig], j$log2FoldChange_b[sig], method = "spearman"), 3))
 }
 
-lfc_scatter <- function(a, b, title, alpha = 0.05) {
-  j <- inner_join(a, b, by = "gene_id", suffix = c("_k", "_s")) %>% filter(!is.na(padj_k), !is.na(padj_s)) %>%
-    mutate(call = case_when(padj_k < alpha & padj_s < alpha ~ "both", padj_k < alpha ~ "kallisto only",
-                            padj_s < alpha ~ "STAR only", TRUE ~ "neither"),
-           lab = if_else(call != "neither" & (abs(log2FoldChange_k - log2FoldChange_s) > 1), symbol_k, NA_character_))
-  ggplot(j, aes(log2FoldChange_k, log2FoldChange_s, color = call)) + geom_abline(color = "grey50") +
+#' log2FC of method a (x) against method b (y) per gene; colour = which method calls the gene a DEG.
+lfc_scatter <- function(a, b, title, names = c("kallisto", "STAR"), alpha = 0.05) {
+  j <- inner_join(a, b, by = "gene_id", suffix = c("_a", "_b")) %>% filter(!is.na(padj_a), !is.na(padj_b)) %>%
+    mutate(call = case_when(padj_a < alpha & padj_b < alpha ~ "both", padj_a < alpha ~ paste(names[1], "only"),
+                            padj_b < alpha ~ paste(names[2], "only"), TRUE ~ "neither"),
+           lab = if_else(call != "neither" & (abs(log2FoldChange_a - log2FoldChange_b) > 1), symbol_a, NA_character_))
+  cols <- setNames(c("firebrick", "steelblue", "darkorange", "grey70"), c("both", paste(names[1], "only"), paste(names[2], "only"), "neither"))
+  ggplot(j, aes(log2FoldChange_a, log2FoldChange_b, color = call)) + geom_abline(color = "grey50") +
     geom_point(data = filter(j, call == "neither"), size = 0.4, alpha = 0.3) + geom_point(data = filter(j, call != "neither"), size = 1) +
     geom_text_repel(data = filter(j, !is.na(lab)), aes(label = lab), size = 3, show.legend = FALSE, max.overlaps = 20) +
-    scale_color_manual(values = c(both = "firebrick", `kallisto only` = "steelblue", `STAR only` = "darkorange", neither = "grey70")) +
-    labs(title = title, x = "log2FC kallisto", y = "log2FC STAR")
+    scale_color_manual(values = cols) + labs(title = title, x = paste("log2FC", names[1]), y = paste("log2FC", names[2]))
 }
 
 # ---- aging vs rejuvenation ------------------------------------------------------------------

@@ -4,10 +4,10 @@
 
 **Data.** 27 bulk RNA-seq samples (one mouse each) from Hahn *et al.*, *Cell* 2023: 12 aging mice (3, 18, 21 months) and 15 mice of a 19-month rejuvenation experiment. Raw reads are re-processed from scratch ([docs/data.md](docs/data.md)).
 
-**Approach.** reads → quality control and trimming → gene counts by two independent methods (kallisto, STAR) → differential expression with DESeq2 → comparison of treatment effects with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
+**Approach.** reads → quality control and trimming → gene counts by three counting methods (kallisto; STAR; RSEM on STAR's alignments) → differential expression with DESeq2 → comparison of treatment effects with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
 
 ## Main results (cerebellum)
-The direction of every result is the same with both counting methods (kallisto numbers shown).
+Numbers from the earlier GENCODE vM25 run with kallisto, **being recomputed** with GENCODE M39 and three counting methods (kallisto, STAR, RSEM); the primary method is chosen on the evidence in [docs/pipeline.md](docs/pipeline.md#choosing-the-counting-method).
 
 | | aDR vs AL (9 females) | YMP vs PBS (6 males) |
 |---|---|---|
@@ -27,19 +27,19 @@ Run the notebooks in numerical order. The heavy steps (QC, trimming, kallisto, S
 NCBI SRA --> .sra --> FASTQ --> FastQC, fastp --> kallisto --+   QC, trimming, kallisto and STAR
  (27 runs)       \---------> fastp --> STAR ----------------+   run on the Euler cluster (01)
                                                             v
-        02 QC/trimming decisions --> 03 DESeq2 per cohort --> 04 kallisto vs STAR --> 05 aging vs rejuvenation
+        02 QC/trimming decisions --> 03 DESeq2 per cohort --> 04 compare methods --> 05 aging vs rejuvenation
 ```
 
 | # | Notebook | Kernel | Does | Time |
 |---|---|---|---|---|
 | 00 | [acquire_data](notebooks/00_acquire_data.ipynb) | Python | *optional:* downloads the 27 runs (~54 GB) to the laptop, for local runs and the adapter check (Euler downloads its own copy) | 30–60 min |
-| 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | **runs QC, trimming (adapter and poly-G), kallisto and STAR on the ETH cluster (Euler)**; copies the results back | STAR array ~2 h (kallisto/QC array not yet timed); the laptop stays idle |
+| 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | **runs QC, trimming (adapter and poly-G), kallisto, STAR and RSEM on the ETH cluster (Euler)**; copies the results back | not yet timed for M39 (earlier STAR array: ~2 h); the laptop stays idle |
 | 02 | [quantify_kallisto](notebooks/02_quantify_kallisto.ipynb) | Python | QC and trimming decisions, kallisto summary; **reads** the Euler results (set `RUN_LOCALLY = True` to run the steps on the laptop: hours) | minutes |
-| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP | 1 min |
-| 04 | [compare_kallisto_star](notebooks/04_compare_kallisto_star.ipynb) | R | agreement of the two methods | 3 min |
+| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (method set in `METHOD`) | 1 min |
+| 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | agreement of kallisto, STAR and RSEM, and the evidence for choosing one | 5 min |
 | 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways | 4 min |
 
-STAR counts are in the repo (`results/star/counts_unstranded.csv.gz`), but kallisto output is not (650 MB): copy it back from Euler (01).
+The STAR count table (`results/star/counts_unstranded.csv.gz`) is in the repo; kallisto (650 MB) and RSEM (400 MB) output are not: copy them back from Euler (01).
 
 ## Run it
 ```bash
@@ -67,6 +67,6 @@ R/helpers.R  R functions for 03, 04, 05   euler/    SLURM scripts for the cluste
 metadata/    sample table and NCBI source tables   results/  small outputs kept in git
 pixi.toml, pixi.lock   software environment
 ```
-Not in git (regenerated): `raw_data/` (reads), `reference/` (mouse genome and annotation), `results/kallisto/`, FastQC reports, STAR alignments. Local only and unused: `processed_data/` (the authors' GEO count tables).
+Not in git (regenerated): `raw_data/` (reads), `reference/` (mouse genome and annotation), `results/kallisto/`, `results/rsem/`, FastQC reports, STAR alignments. Local only and unused: `processed_data/` (the authors' GEO count tables).
 
 Paper: Hahn *et al.* 2023, *Cell* 186:4117 ([doi](https://doi.org/10.1016/j.cell.2023.07.027)); authors' code: github.com/OliInTheValley/SpatioTemporal_Analysis.

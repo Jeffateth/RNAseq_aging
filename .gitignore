@@ -22,6 +22,8 @@ results/star/qc/
 results/star/*.tar.gz
 results/de/
 results/compare/star_*.csv
+results/compare/rsem_*.csv
+results/rsem/
 # tarballs copied back from Euler
 results/euler/
 

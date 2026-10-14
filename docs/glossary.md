@@ -53,12 +53,13 @@ Terms are grouped by where they appear in the workflow. Abbreviations are spelle
 ## Quantification
 | Term | Meaning |
 |---|---|
-| **Reference genome / transcriptome / annotation** | the mouse DNA sequence / the sequences of all known mRNAs / the file (GTF) saying where genes and exons are. We use GENCODE release vM25 (mouse genome version GRCm38 = mm10) |
+| **Reference genome / transcriptome / annotation** | the mouse DNA sequence / the sequences of all known mRNAs / the file (GTF) saying where genes and exons are. We use GENCODE release M39 (mouse genome version GRCm39) |
 | **Transcript vs gene** | one gene can make several transcripts (isoforms). The transcript → gene link comes from the annotation, not from the sequencing data; kallisto estimates per transcript, `tximport` sums to genes |
 | **kallisto** | estimates how much of each known *transcript* is present: builds an index of the transcript sequences, finds for each read pair the transcripts it is compatible with (pseudoalignment), then estimates reads per transcript, sharing out reads that fit several isoforms; fast, small memory |
 | **Pseudoalignment (rate)** | finding which transcripts a read is compatible with, without placing it on the genome; the rate is the share of read pairs compatible with at least one transcript |
 | **STAR** | aligner: places each read at its exact position in the genome, including across exon–exon junctions; needs ~30 GB RAM for the index |
 | **Index** | pre-built searchable form of the reference |
+| **RSEM** | quantifier that takes the reads aligned to transcripts (here from STAR) and shares reads that fit several isoforms between them with an expectation-maximisation (EM) algorithm; gives expected counts (not whole numbers), TPM and effective length per gene |
 | **GeneCounts** | STAR's per-gene read counts (unique reads only); we use the unstranded column |
 | **tximport** | R package that sums kallisto's transcript estimates into gene counts for DESeq2, using the annotation's transcript → gene link |
 | **Counts, TPM** | reads per gene / transcripts per million (counts normalised for gene length and depth); DESeq2 needs counts |
@@ -68,6 +69,7 @@ Terms are grouped by where they appear in the workflow. Abbreviations are spelle
 | Term | Meaning |
 |---|---|
 | **DESeq2** | R package testing, per gene, whether counts differ between groups |
+| **Dispersion** | DESeq2's measure of how much a gene's counts vary between mice of the same group beyond counting noise; lower means more power to detect differences |
 | **DEG** | differentially expressed gene (here: adjusted p < 0.05) |
 | **log2FC** | log2 fold change: +1 = twice as high, −1 = half |
 | **p / padj** | p-value / p-value adjusted for testing ~15,000 genes at once (Benjamini–Hochberg); padj < 0.05 means ≤ 5% of such calls are expected to be false |

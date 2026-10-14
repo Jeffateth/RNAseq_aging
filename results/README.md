@@ -7,12 +7,13 @@ Small outputs kept in git; large or regenerable files are git-ignored (`.gitigno
 | `qc/` | fastp report per run (`<SRR>.fastp.json` in git; the `.html` version is regenerated); `polyG_sensitivity_SRR21355398.csv`: genes whose kallisto counts changed > 5 % when fastp's poly-G trimming was added (one-run test, notebook 02; the pipeline now always uses it) | yes |
 | `qc/raw/`, `qc/multiqc_raw.html` | FastQC reports on the untrimmed reads, combined MultiQC report (notebook 02 or 01) | no |
 | `kallisto/` | per-run kallisto estimates (notebook 02 or 01) | no |
+| `rsem/` | per-run RSEM gene results from Euler (notebook 01) | no |
 | `star/` | STAR counts and mapping statistics from Euler (notebook 01) | counts + QC table |
-| `de/` | DESeq2 table per comparison (notebook 03) | no (regenerated) |
-| `compare/` | kallisto vs STAR (notebook 04) | summary tables |
+| `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 | no (regenerated) |
+| `compare/` | kallisto vs STAR vs RSEM (notebook 04) | summary tables |
 | `aging_vs_rejuvenation/` | the main analysis (notebook 05) | yes |
 
-Gene identifiers everywhere: GENCODE vM25 Ensembl ids with version (e.g. `ENSMUSG00000102693.1`) and the gene symbol.
+Gene identifiers everywhere: GENCODE M39 Ensembl ids with version (e.g. `ENSMUSG00000102693.1`) and the gene symbol.
 
 ## Reading the comparisons (direction)
 Every comparison is *first group vs second group*, and a **positive** log2 fold change (log2FC) or enrichment score (NES) means **higher in the first group**.
@@ -100,17 +101,31 @@ Aging-signature score (mean z-score of aging-up genes minus aging-down genes) in
 | `t_test_p` | Welch t-test p-value (rough, with 3–5 mice per group) |
 
 ### `aging_vs_rejuvenation/paper_CAS_named_genes.csv`
-The paper's aging-signature genes named in its Fig. 2B: `lfc_*` and `padj_*` for aging (21 vs 3 months), aDR and YMP (kallisto). Many treatment values are not significant (`padj` near 1).
+The paper's aging-signature genes named in its Fig. 2B: `lfc_*` and `padj_*` for aging (21 vs 3 months), aDR and YMP (method set in `SHOW`, default kallisto). Many treatment values are not significant (`padj` near 1).
 
-### `compare/` (kallisto vs STAR)
+### `compare/` (kallisto, STAR and RSEM)
 | File / column | Meaning |
 |---|---|
-| `counts_per_sample.csv`: `spearman`, `kallisto_M`, `star_M`, `ratio_star_kallisto` | per-sample agreement of gene counts; total counts in millions; STAR counts only uniquely mapped reads, so the ratio is below 1 |
-| `de_agreement.csv`: `total_DEG_*` | all DEGs per method |
-| `genes_tested_both`, `DEG_kallisto`, `DEG_star`, `shared` | restricted to genes with a valid p-value in both methods |
+| `counts_per_sample.csv`: `spearman_<a>_<b>`, `kallisto_M`, `STAR_M`, `RSEM_M` | per-sample rank correlation of gene counts for each pair of methods; total counts in millions; STAR counts only uniquely mapped reads, so its total is lower |
+| `de_agreement.csv`: `method_a`, `method_b`, `contrast` | one row per pair of methods and comparison |
+| `total_DEG_a`, `total_DEG_b` | all DEGs of each method |
+| `genes_tested_both`, `DEG_a`, `DEG_b`, `shared` | restricted to genes with a valid p-value in both methods |
 | `jaccard` | shared ÷ combined DEGs (1 = identical lists) |
 | `same_direction` | share of shared DEGs with the same sign (1 = all) |
 | `lfc_spearman_all` / `_sig` | log2FC rank correlation over all genes / over genes significant in either method |
+
+### `compare/method_evidence.csv` (choosing a method)
+One row per method (`kallisto`, `STAR`, `RSEM`); criteria and caveats are in [../docs/pipeline.md](../docs/pipeline.md#choosing-the-counting-method).
+
+| Column | Meaning |
+|---|---|
+| `counted_pairs_pct_median`, `min`, `max` | share of trimmed read pairs counted in a gene, over the 27 runs |
+| `genes_detected` | genes with ≥ 10 counts in ≥ 3 runs |
+| `replicate_r_median` | median over groups of the median pairwise correlation of log2 CPM between mice of a group |
+| `dispersion_aging`, `_aDR`, `_YMP` | median DESeq2 dispersion over genes tested by all methods |
+| `DEG_without`, `DEG_with`, `jaccard_outlier` | aging DEGs without / with outlier SRR21355389 and their overlap |
+| `aging_genes_up_of_5`, `aDR_genes_up_of_23` | positive controls: paper genes that go up |
+| `mean_jaccard_with_others` | mean DEG overlap with the other two methods |
 
 ### `star/`
 | File | Content |

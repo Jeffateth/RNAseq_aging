@@ -5,7 +5,7 @@ Contents
   Download ............ download_all (prefetch with progress bar), validate_all, status
   QC and trimming ..... fastq (.sra -> FASTQ), fastqc, multiqc, fastqc_summary, trim (fastp)
   Quantification ...... build_index, quant (kallisto), process (one run end to end), check_consistent, qc_summary
-  Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
+  Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics), check_rsem
 Terms: docs/glossary.md."""
 import os
 import shutil
@@ -22,8 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SRA, FASTQ, TMP = ROOT / "raw_data/sra", ROOT / "raw_data/fastq", ROOT / "raw_data/tmp"
 QC, KALLISTO, LOGS = ROOT / "results/qc", ROOT / "results/kallisto", ROOT / "results/logs"
 REF = ROOT / "reference"
-TRANSCRIPTS = REF / "gencode.vM25.transcripts.fa.gz"   # GENCODE vM25 = GRCm38/mm10, as in the paper
-INDEX = REF / "gencode.vM25.kallisto.idx"
+TRANSCRIPTS = REF / "gencode.vM39.transcripts.fa.gz"   # GENCODE M39 = GRCm39, one annotation for kallisto, STAR and RSEM
+INDEX = REF / "gencode.vM39.kallisto.idx"
 for d in (SRA, FASTQ, TMP, QC, KALLISTO, LOGS):
     d.mkdir(parents=True, exist_ok=True)
 
@@ -287,10 +287,10 @@ def clean_tmp():
 
 
 def download_reference():
-    """GENCODE vM25 mouse transcriptome (kallisto) and annotation (tx -> gene map for tximport)."""
-    base = "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M25"
+    """GENCODE M39 mouse transcriptome (kallisto) and annotation (tx -> gene map for tximport)."""
+    base = "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M39"
     REF.mkdir(exist_ok=True)
-    for f in ("gencode.vM25.transcripts.fa.gz", "gencode.vM25.annotation.gtf.gz"):
+    for f in ("gencode.vM39.transcripts.fa.gz", "gencode.vM39.annotation.gtf.gz"):
         if not (REF / f).is_file():
             sh(f"curl -sL -o {REF / f} {base}/{f}", "reference")
 
@@ -318,10 +318,11 @@ EULER = ROOT / "results/euler"      # put the tarballs from euler/04_collect.sh 
 
 
 def unpack_euler(src: Path = EULER):
-    """Unpack the tarballs from euler/04_collect.sh: kallisto_results and qc_results into results/ (-> results/kallisto, results/qc),
-    star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
+    """Unpack the tarballs from euler/04_collect.sh: kallisto_results, rsem_results and qc_results into results/ (-> results/kallisto,
+    results/rsem, results/qc), star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
     import tarfile
-    targets = {"kallisto_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star"}
+    targets = {"kallisto_results.tar.gz": ROOT / "results", "rsem_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results",
+               "star_results.tar.gz": ROOT / "results/star"}
     for name, dest in targets.items():
         f = next((p for p in (src / name, ROOT / "results/star" / name) if p.is_file()), None)    # star tarball may sit in results/star/
         if f is None:
@@ -359,3 +360,16 @@ def load_star(runs: pd.DataFrame, root: Path = STAR):
     qc = pd.DataFrame(qc).T.round(2).join(runs["group"])
     qc.index.name = "SRR"
     return counts, qc
+
+
+RSEM = ROOT / "results/rsem"
+
+
+def check_rsem(runs: pd.DataFrame) -> pd.DataFrame:
+    """One row per run from results/rsem/<SRR>/<SRR>.genes.results (euler/04_collect.sh): genes in the reference, genes with
+    any reads, and total expected counts in millions. RSEM shares multi-mapping reads between genes, so counts are not integers."""
+    rows = {}
+    for s in runs.index:
+        t = pd.read_csv(RSEM / s / f"{s}.genes.results", sep="\t", usecols=["gene_id", "expected_count"])
+        rows[s] = {"genes": len(t), "genes_with_reads": int((t.expected_count > 0).sum()), "counts_M": round(t.expected_count.sum() / 1e6, 2)}
+    return pd.DataFrame.from_dict(rows, orient="index").join(runs["group"])
