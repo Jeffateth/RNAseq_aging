@@ -11,7 +11,8 @@
 #   star      STAR with gene counting on the same trimmed reads (-> $MAP/<SRR>), also writes the transcriptome alignments for RSEM
 #   rsem      RSEM on STAR's transcriptome alignments (-> $RSEM/<SRR>); needs the star stage done first
 # Stages whose output already exists are skipped, so a rerun does only what is missing. submit.sh runs two arrays:
-# a light one ("qc+kallisto", small memory) and a heavy one ("star+rsem", ~30 GB for the genome index).
+# a light one ("qc+kallisto", 4 GB per core), a STAR one ("star", ~30 GB for the genome index) and an RSEM one ("rsem", 6 GB per core;
+# RSEM takes 40-90 min per run, so it is kept out of the STAR tasks that reserve 48 GB).
 # fastp settings are identical to the laptop pipeline (scripts/helpers.py: trim).
 set -euo pipefail
 source "${REPO:-$HOME/RNAseq_aging}/euler/common.sh"
@@ -46,7 +47,7 @@ if (( todo_qc + todo_kal + todo_star )); then          # RSEM alone needs no rea
     kallisto quant -i "$KAL_INDEX" -o "$KAL/$srr" --threads 8 "$fq/${srr}_trim_1.fastq.gz" "$fq/${srr}_trim_2.fastq.gz"   # 8 threads, as on the laptop
   fi
   if (( todo_star )); then
-    mkdir -p "$MAP/$srr"
+    rm -rf "$MAP/$srr"; mkdir -p "$MAP/$srr"                              # a killed earlier attempt leaves _STARtmp behind, and STAR refuses to start then
     STAR --genomeDir "$INDEX" --runThreadN 8 --readFilesIn "$fq/${srr}_trim_1.fastq.gz" "$fq/${srr}_trim_2.fastq.gz" --readFilesCommand zcat \
          --quantMode GeneCounts TranscriptomeSAM --outSAMtype None --outFileNamePrefix "$MAP/$srr/"      # no genome BAM: not used, saves time and disk
   fi
@@ -55,5 +56,5 @@ fi
 
 if (( todo_rsem )); then
   mkdir -p "$RSEM/$srr"
-  rsem-calculate-expression --alignments --paired-end -p 8 -q "$MAP/$srr/Aligned.toTranscriptome.out.bam" "$RSEM_REF" "$RSEM/$srr/$srr"   # unstranded (default)
+  rsem-calculate-expression --alignments --paired-end --no-bam-output -p 8 -q "$MAP/$srr/Aligned.toTranscriptome.out.bam" "$RSEM_REF" "$RSEM/$srr/$srr"   # unstranded (default); --no-bam-output: no extra BAM copy of the alignments
 fi

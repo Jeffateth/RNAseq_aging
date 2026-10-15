@@ -53,7 +53,7 @@ Terms are grouped by where they appear in the workflow. Abbreviations are spelle
 ## Quantification
 | Term | Meaning |
 |---|---|
-| **Reference genome / transcriptome / annotation** | the mouse DNA sequence / the sequences of all known mRNAs / the file (GTF) saying where genes and exons are. We use GENCODE release M39 (mouse genome version GRCm39) |
+| **Reference genome / transcriptome / annotation** | the mouse DNA sequence / the sequences of all known mRNAs / the file (GTF) saying where genes and exons are. We use GENCODE release M39, the latest as of 14 October 2026 (mouse genome version GRCm39) |
 | **Transcript vs gene** | one gene can make several transcripts (isoforms). The transcript → gene link comes from the annotation, not from the sequencing data; kallisto estimates per transcript, `tximport` sums to genes |
 | **kallisto** | estimates how much of each known *transcript* is present: builds an index of the transcript sequences, finds for each read pair the transcripts it is compatible with (pseudoalignment), then estimates reads per transcript, sharing out reads that fit several isoforms; fast, small memory |
 | **Pseudoalignment (rate)** | finding which transcripts a read is compatible with, without placing it on the genome; the rate is the share of read pairs compatible with at least one transcript |
