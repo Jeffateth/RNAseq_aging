@@ -11,7 +11,7 @@
 #   star      STAR with gene counting on the same trimmed reads (-> $MAP/<SRR>), also writes the transcriptome alignments for RSEM
 #   rsem      RSEM on STAR's transcriptome alignments (-> $RSEM/<SRR>); needs the star stage done first
 # Stages whose output already exists are skipped, so a rerun does only what is missing. submit.sh runs two arrays:
-# a light one ("qc+kallisto", 4 GB per core), a STAR one ("star", ~30 GB for the genome index) and an RSEM one ("rsem", 6 GB per core;
+# a light one ("qc+kallisto", 4 GB per core), a STAR one ("star", ~30 GB for the genome index) and an RSEM one ("rsem", 3 GB per core;
 # RSEM takes 40-90 min per run, so it is kept out of the STAR tasks that reserve 48 GB).
 # fastp settings are identical to the laptop pipeline (scripts/helpers.py: trim).
 set -euo pipefail

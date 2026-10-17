@@ -1,0 +1,4 @@
+method,counted_pairs_pct_median,min,max,genes_detected,replicate_r_median,dispersion_aging,dispersion_aDR,dispersion_YMP,DEG_without,DEG_with,jaccard_outlier,aging_genes_up_of_5,aDR_genes_up_of_23,mean_jaccard_with_others
+RSEM,54.8,47.2,60.1,19311,0.9873,0.022,0.017,0.019,114,239,0.43,5,19,0.47
+STAR,54.3,47,58.7,20649,0.98740000000000006,0.013,0.011,0.015,168,307,0.48,5,19,0.45
+kallisto,68.8,65.1,72.5,26273,0.9875,0.019,0.014,0.017,132,279,0.42,5,19,0.49
