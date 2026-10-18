@@ -1,4 +1,4 @@
-SRR,input_pairs_M,unique_%,multi_%,assigned_to_gene_%,frac_read1_same_strand,group
+SRR,input_pairs_M,unique_%,multi_%,STAR_assigned_to_gene_%,frac_read1_same_strand,group
 SRR21355401,14.88,79.56,7.95,48.98,0.5,aging 3mo
 SRR21355396,25.69,79.41,8.61,49.9,0.5,aging 3mo
 SRR21355392,16.08,79.73,8.23,50.18,0.5,aging 3mo

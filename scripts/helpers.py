@@ -1,31 +1,29 @@
-"""Python helpers for notebooks 00, 01 and 02. Every pipeline step is idempotent: finished work is skipped.
+"""Python helpers for notebooks 01 and 02.
 
 Contents
-  Setup and paths ..... ROOT, SRA, FASTQ, QC, KALLISTO, STAR ...; load_runs() reads metadata/samples.csv
-  Download ............ download_all (prefetch with progress bar), validate_all, status
-  QC and trimming ..... fastq (.sra -> FASTQ), fastqc, multiqc, fastqc_summary, trim (fastp)
-  Quantification ...... build_index, quant (kallisto), process (one run end to end), check_consistent, qc_summary
-  Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics), check_rsem
+  Setup and paths ..... ROOT, SRA, TMP, QC, KALLISTO, STAR, RSEM; load_runs() reads metadata/samples.csv
+  Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
+  Checks .............. status, check_consistent, qc_summary (kallisto + fastp), check_rsem
+  QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts)
+  Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter)
 Terms: docs/glossary.md."""
 import os
 import shutil
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 import pandas as pd
 
-# kallisto/fastp live in the pixi env (not activated when VS Code starts the kernel); sra-tools come from Homebrew
+# fastp and multiqc live in the pixi env (not activated when VS Code starts the kernel); sra-tools come from Homebrew
 os.environ["PATH"] = f"{Path(sys.executable).parent}:{os.environ['PATH']}:/opt/homebrew/bin"
 ROOT = Path(__file__).resolve().parents[1]
-SRA, FASTQ, TMP = ROOT / "raw_data/sra", ROOT / "raw_data/fastq", ROOT / "raw_data/tmp"
+SRA, TMP = ROOT / "raw_data/sra", ROOT / "raw_data/tmp"
 QC, KALLISTO, LOGS = ROOT / "results/qc", ROOT / "results/kallisto", ROOT / "results/logs"
-REF = ROOT / "reference"
-TRANSCRIPTS = REF / "gencode.vM39.transcripts.fa.gz"   # GENCODE M39 = GRCm39, one annotation for kallisto, STAR and RSEM
-INDEX = REF / "gencode.vM39.kallisto.idx"
-for d in (SRA, FASTQ, TMP, QC, KALLISTO, LOGS):
+for d in (SRA, TMP, QC, KALLISTO, LOGS):
     d.mkdir(parents=True, exist_ok=True)
+
+# ---- small helpers ---------------------------------------------------------------------
 
 
 def load_runs() -> pd.DataFrame:
@@ -44,20 +42,12 @@ def sh(cmd: str, log: str) -> None:
         raise RuntimeError(f"failed: {cmd}\n{tail}")
 
 
-def timed(label):
-    def deco(fn):
-        def wrapper(srr, *a, **k):
-            t = time.time()
-            out = fn(srr, *a, **k)
-            if out != "skip":
-                print(f"  {srr} {label}: {time.time() - t:.0f}s")
-            return out
-        return wrapper
-    return deco
-
-
 # ---- stage checks -----------------------------------------------------------------------
+
+
 def has_sra(srr):  return (SRA / srr / f"{srr}.sra").is_file()
+
+
 def has_quant(srr): return (KALLISTO / srr / "abundance.h5").is_file()
 
 
@@ -69,10 +59,9 @@ def was_trimmed(srr):
 
 
 def status(runs: pd.DataFrame) -> pd.DataFrame:
-    """Per-run progress table: downloaded -> quantified."""
+    """Per-run table: is kallisto's result present (quantified) and were the reads fastp-trimmed (trimmed)?"""
     return pd.DataFrame({
         "group": runs["group"],
-        "sra_GB": [round((SRA / s / f"{s}.sra").stat().st_size / 1e9, 2) if has_sra(s) else None for s in runs.index],
         "quantified": [has_quant(s) for s in runs.index],
         "trimmed": [was_trimmed(s) for s in runs.index],
     })
@@ -87,80 +76,15 @@ def check_consistent(runs: pd.DataFrame, trim_reads: bool):
     print(f"consistent: all quantified runs used trimmed={trim_reads}")
 
 
-# ---- stages -----------------------------------------------------------------------------
-def _dir_bytes(d):
-    return sum(f.stat().st_size for f in d.glob("*") if f.is_file()) if d.is_dir() else 0
+# ---- QC reports and the adapter check ---------------------------------------------------
 
 
-def download_all(runs: pd.DataFrame):
-    """prefetch every missing .sra (resumes partial files, validates) with a live progress bar in GB.
-    Logs: results/logs/<SRR>.log. Safe to interrupt and re-run."""
-    from tqdm.auto import tqdm
-    exp = runs["sra_size_MB"] / 1e3 * 1.048576      # NCBI lists size_MB in MiB; x1.048576 converts to decimal GB (files on disk match)
-    todo = [s for s in runs.index if not has_sra(s)]
-    if not todo:
-        return print(f"all {len(runs)} runs present")
-    bar = tqdm(total=round(exp[todo].sum(), 1), unit="GB", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} GB [{elapsed}<{remaining}]")
-    finished = 0.0
-    for i, srr in enumerate(todo, 1):
-        bar.set_description(f"{srr} ({i}/{len(todo)})")
-        with open(LOGS / f"{srr}.log", "a") as f:
-            p = subprocess.Popen(f"prefetch {srr} --output-directory {SRA} --max-size 100G",
-                                 shell=True, stdout=f, stderr=subprocess.STDOUT)
-            try:
-                while p.poll() is None:
-                    bar.n = round(min(finished + _dir_bytes(SRA / srr) / 1e9, bar.total), 1)   # never exceed the total
-                    bar.refresh()
-                    time.sleep(1)
-            except BaseException:
-                p.kill()                                    # no orphaned prefetch if the cell is interrupted
-                raise
-        if p.returncode or not has_sra(srr):
-            raise RuntimeError(f"prefetch failed for {srr}; see {LOGS / (srr + '.log')}")
-        sh(f"vdb-validate {SRA / srr / (srr + '.sra')}", srr)
-        finished += exp[srr]
-        bar.n = round(min(finished, bar.total), 1)
-        bar.refresh()
-    bar.close()
-    print(f"all {len(runs)} runs present" if all(has_sra(s) for s in runs.index) else "some runs missing")
-
-
-def validate_all(runs: pd.DataFrame):
-    """vdb-validate every .sra; returns the runs that fail (empty list = all OK)."""
-    from tqdm.auto import tqdm
-    bad = []
-    for s in tqdm(runs.index, desc="validate"):
-        r = subprocess.run(f"vdb-validate {SRA / s / (s + '.sra')}", shell=True, capture_output=True, text=True)
-        if r.returncode or "consistent" not in (r.stdout + r.stderr):
-            bad.append(s)
-    return bad
-
-
-@timed("fastq")
-def fastq(srr):
-    """.sra -> raw paired FASTQ (uncompressed, temporary)."""
-    if (FASTQ / f"{srr}_1.fastq").is_file() and (FASTQ / f"{srr}_2.fastq").is_file():
-        return "skip"
-    sh(f"fasterq-dump {SRA / srr / (srr + '.sra')} --split-3 --threads 6 --temp {TMP} --outdir {FASTQ}", srr)
-
-
-@timed("fastqc")
-def fastqc(srr, n_pairs=None):
-    """FastQC on ALL reads of a run (n_pairs=None) or only the first n_pairs pairs -> results/qc/raw/.
-    Full runs are converted to a temporary FASTQ (~7 GB) that is deleted afterwards."""
-    out = QC / "raw"
-    out.mkdir(exist_ok=True)
-    if (out / f"{srr}_2_fastqc.zip").is_file():
-        return "skip"
-    tmp = TMP / f"qc_{srr}"
-    tmp.mkdir(exist_ok=True)
-    sra = SRA / srr / f"{srr}.sra"
-    if n_pairs:
-        sh(f"fastq-dump -X {n_pairs} --split-files -O {tmp} {sra}", srr)
-    else:
-        sh(f"fasterq-dump {sra} --split-3 --threads 6 --temp {tmp} --outdir {tmp}", srr)
-    sh(f"fastqc -q -t 4 --outdir {out} {tmp}/{srr}_1.fastq {tmp}/{srr}_2.fastq", srr)
-    shutil.rmtree(tmp)
+def download_run(srr: str):
+    """prefetch one run from NCBI (resumes a partial file) and check it with vdb-validate; needs sra-tools (brew install sratoolkit)."""
+    if not has_sra(srr):
+        sh(f"prefetch {srr} --output-directory {SRA} --max-size 100G", srr)
+    sh(f"vdb-validate {SRA / srr / (srr + '.sra')}", srr)
+    print(f"{srr}.sra present and valid")
 
 
 def multiqc():
@@ -187,19 +111,6 @@ def fastqc_summary(srrs, modules=KEY_MODULES) -> pd.DataFrame:
     return pd.DataFrame(rows).T[modules] if rows else pd.DataFrame(columns=modules)
 
 
-@timed("trim")
-def trim(srr):
-    """Optional: fastp adapter/quality trimming of the raw FASTQ -> <SRR>_trim_{1,2}.fastq.gz + fastp report."""
-    out1, out2 = FASTQ / f"{srr}_trim_1.fastq.gz", FASTQ / f"{srr}_trim_2.fastq.gz"
-    if out1.is_file() and out2.is_file():
-        return "skip"
-    fastq(srr)
-    sh(f"fastp -i {FASTQ}/{srr}_1.fastq -I {FASTQ}/{srr}_2.fastq -o {out1} -O {out2} "
-       f"--detect_adapter_for_pe --trim_poly_g --length_required 20 --thread 6 "
-       f"--json {QC}/{srr}.fastp.json --html {QC}/{srr}.fastp.html", srr)
-
-
-# adapters fastp detected (Nextera transposase end, the Tn5 library prep): mate 1 / mate 2 share the first 19 bases
 NEXTERA = {1: "CTGTCTCTTATACACATCTCCGAGCCCACGAGAC", 2: "CTGTCTCTTATACACATCTGACGCTGCCGACGA"}
 
 
@@ -252,49 +163,6 @@ def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFr
     return pd.DataFrame(rows).set_index("mate")
 
 
-@timed("kallisto")
-def quant(srr, trimmed=False):
-    """Pseudoalign reads (raw or fastp-trimmed) to the transcriptome."""
-    if has_quant(srr):
-        return "skip"
-    r1, r2 = (f"{FASTQ}/{srr}_trim_1.fastq.gz", f"{FASTQ}/{srr}_trim_2.fastq.gz") if trimmed \
-        else (f"{FASTQ}/{srr}_1.fastq", f"{FASTQ}/{srr}_2.fastq")
-    sh(f"kallisto quant -i {INDEX} -o {KALLISTO / srr} --threads 8 {r1} {r2}", srr)
-
-
-def process(srr, trim_reads=False, keep_fastq=False):
-    """sra -> FASTQ -> [fastp] -> kallisto -> delete FASTQ (unless keep_fastq). Skips finished runs."""
-    if has_quant(srr):
-        return
-    fastq(srr)
-    if trim_reads:
-        trim(srr)
-    quant(srr, trimmed=trim_reads)
-    if not keep_fastq:
-        for f in FASTQ.glob(f"{srr}_*fastq*"):
-            f.unlink()
-
-
-def build_index():
-    if INDEX.is_file():
-        return print("index exists")
-    sh(f"kallisto index -i {INDEX} {TRANSCRIPTS}", "kallisto_index")
-
-
-def clean_tmp():
-    shutil.rmtree(TMP, ignore_errors=True)
-    TMP.mkdir(parents=True, exist_ok=True)
-
-
-def download_reference():
-    """GENCODE M39 mouse transcriptome (kallisto) and annotation (tx -> gene map for tximport)."""
-    base = "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M39"
-    REF.mkdir(exist_ok=True)
-    for f in ("gencode.vM39.transcripts.fa.gz", "gencode.vM39.annotation.gtf.gz"):
-        if not (REF / f).is_file():
-            sh(f"curl -sL -o {REF / f} {base}/{f}", "reference")
-
-
 def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
     """Per-run kallisto pseudoalignment rate (+ fastp read pairs/Q30/duplication if trimmed)."""
     import json
@@ -314,6 +182,8 @@ def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---- results copied back from Euler ----------------------------------------------------------
+
+
 EULER = ROOT / "results/euler"      # put the tarballs from euler/04_collect.sh here (git-ignored)
 
 
@@ -334,7 +204,6 @@ def unpack_euler(src: Path = EULER):
         print(f"unpacked {name} -> {dest.relative_to(ROOT)}")
 
 
-# ---- STAR counts and mapping statistics (from the unpacked Euler results) ----------------------------------------------------
 STAR = ROOT / "results/star"
 
 
@@ -353,7 +222,7 @@ def load_star(runs: pd.DataFrame, root: Path = STAR):
         qc[s] = {"input_pairs_M": pick("Number of input reads") / 1e6,
                  "unique_%": pick("Uniquely mapped reads %"),
                  "multi_%": pick("% of reads mapped to multiple loci"),
-                 "assigned_to_gene_%": 100 * g[1].sum() / (pick("Number of input reads")),
+                 "STAR_assigned_to_gene_%": 100 * g[1].sum() / (pick("Number of input reads")),
                  "frac_read1_same_strand": g[2].sum() / (g[2].sum() + g[3].sum())}   # ~0.5 = unstranded
     counts = pd.DataFrame(counts).astype(int)
     counts.index.name = "gene_id"

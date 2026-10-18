@@ -26,19 +26,26 @@ Run in numerical order. The heavy steps (QC, trimming, kallisto, STAR, RSEM) run
 
 | # | Notebook | Kernel | Does |
 |---|---|---|---|
-| 00 | [acquire_data](notebooks/00_acquire_data.ipynb) | Python | *optional:* downloads the 27 runs (~54 GB) to the laptop, for local runs and the adapter check |
 | 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | **runs the heavy steps on Euler** and copies the results back; the cluster commands and scripts (`euler/`) are described here |
-| 02 | [quantify_kallisto](notebooks/02_quantify_kallisto.ipynb) | Python | QC and trimming decisions, kallisto summary (`RUN_LOCALLY = True` runs the steps on the laptop: hours) |
+| 02 | [qc_trimming](notebooks/02_qc_trimming.ipynb) | Python | QC and trimming decisions, with the evidence (FastQC verdicts, adapter and poly-G check) |
 | 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (method set in `METHOD`) |
 | 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | agreement of the three methods and the evidence for choosing one |
 | 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways |
+
+## Reproduce
+1. **Software:** laptop `pixi install` (exact versions in `pixi.lock`); Euler `bash euler/00_setup.sh` (tool versions pinned there).
+2. **Data and reference:** `euler/01_download.sh` fetches the 27 runs from NCBI SRA (accessions in `metadata/srr_list.txt`) and GENCODE M39 (GRCm39).
+3. **Processing:** `euler/submit.sh` → `euler/05_check.sh` → `euler/04_collect.sh`, then copy the tarballs to `results/euler/` (commands in notebook 01).
+4. **Analysis:** notebooks 01–05 in order. The pathway tests are seeded; the MSigDB gene sets are fetched on first use, so a later MSigDB release can change pathway results.
+
+The cluster scripts are plain bash and SLURM, so they can run on any SLURM cluster (not tested elsewhere). To skip steps 2–3, use the four tarballs of the run reported here (`results/euler/`, not in git; SHA-256 checksums can be made with `shasum -a 256`). A few exploratory one-run tests quoted in `docs/pipeline.md` (marked there) are not scripted.
 
 ## Run it
 ```bash
 pixi install                              # kallisto, fastp, FastQC, R/Bioconductor, Jupyter (pixi.toml)
 pixi run R -e 'IRkernel::installspec()'   # once: makes the R kernel visible to VS Code / Jupyter
 pixi run jupyter lab                      # or open notebooks/ in VS Code and pick the kernel named above
-brew install sratoolkit                   # only for notebook 00 / local runs
+brew install sratoolkit                   # only for the adapter check in notebook 02 (downloads one run)
 ```
 Notebook 01 needs an ETH account and the VPN. Finished work is always skipped, so interrupted runs resume.
 
@@ -46,6 +53,6 @@ Notebook 01 needs an ETH account and the VPN. Finished work is always skipped, s
 - **Docs:** [docs/data.md](docs/data.md) (study, design, identifiers), [docs/pipeline.md](docs/pipeline.md) (each step and why, method choice), [docs/glossary.md](docs/glossary.md), [results/README.md](results/README.md) (how to read the result tables), [docs/Tutorial.md](docs/Tutorial.md) (the course tutorial this follows, Z. He, ETH Zurich).
 - **Code:** `notebooks/`, `scripts/` (`helpers.py`, `build_metadata.py`), `R/helpers.R`, `euler/` (SLURM scripts), `pixi.toml` / `pixi.lock` (software).
 - **Data:** `metadata/` (sample table, NCBI source tables), `results/` (small outputs in git).
-- **Not in git (regenerated):** `raw_data/`, `reference/`, `results/kallisto/`, `results/rsem/`, FastQC reports, STAR alignments. Local and unused: `processed_data/` (the authors' GEO count tables).
+- **Not in git:** `raw_data/` (one `.sra` for the adapter check), `results/kallisto/`, `results/rsem/`, `results/euler/` (the result tarballs from Euler), FastQC reports.
 
 Paper: Hahn *et al.* 2023, *Cell* 186:4117 ([doi](https://doi.org/10.1016/j.cell.2023.07.027)); authors' code: github.com/OliInTheValley/SpatioTemporal_Analysis.

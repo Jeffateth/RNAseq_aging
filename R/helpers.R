@@ -2,7 +2,7 @@
 #
 # Contents (functions grouped by purpose)
 #   Load data ........ load_samples, load_txi (kallisto), load_rsem, load_star_counts, subset_txi
-#   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables, run_de
+#   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables
 #   Explore .......... pca_plot, outlier_genes
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
@@ -100,10 +100,6 @@ run_dds <- function(x, samples, exclude = "SRR21355389") {
        aDR = make_dds(x, grp(c("AL", "aDR")), ~ group, min_n = 4),
        YMP = make_dds(x, grp(c("PBS", "YMP")), ~ group, min_n = 3))
 }
-
-#' The four analyses of notebook 03 for either count source: aging 18v3 / 21v3 (sex covariate), aDR vs AL, YMP vs PBS.
-#' Returns a named list of tidy result tables.
-run_de <- function(x, samples, genes, exclude = "SRR21355389") de_tables(run_dds(x, samples, exclude), genes)
 
 #' The four result tables from the datasets of run_dds().
 de_tables <- function(d, genes) list(

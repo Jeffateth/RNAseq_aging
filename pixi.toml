@@ -5,18 +5,15 @@ channels = ["conda-forge", "bioconda"]
 platforms = ["osx-arm64"]            # Apple-silicon Mac; add "linux-64" / "osx-64" to use another machine
 
 [dependencies]
-# Read processing (notebook 02)
-kallisto = "*"                       # transcript quantification
-fastqc = "*"                         # read quality report
+# QC reports and the adapter check (notebooks 01, 02). The heavy steps (FastQC, fastp, kallisto, STAR, RSEM) run on Euler:
+# their versions are pinned in euler/00_setup.sh
 multiqc = "*"                        # combines the FastQC reports
-fastp = "*"                          # adapter and quality trimming
+fastp = "*"                          # used by the adapter check in notebook 02
 
-# Python side (notebooks 00, 02, 01; scripts/helpers.py)
+# Python side (notebooks 01, 02; scripts/helpers.py)
 python = "3.12.*"
 pandas = "*"
 numpy = "*"
-tqdm = "*"                           # progress bars
-ipywidgets = "*"                     # renders the progress bars in notebooks
 jupyterlab = "*"
 nbconvert = "*"                      # run notebooks from the command line
 
@@ -27,7 +24,6 @@ r-tidyverse = "*"                    # data frames and plots (dplyr, ggplot2, ..
 r-ggrepel = "*"                      # non-overlapping plot labels
 bioconductor-deseq2 = "*"            # differential expression
 bioconductor-tximport = "*"          # transcript estimates -> gene counts
-bioconductor-rhdf5 = "*"             # lets tximport read kallisto's .h5 files
 bioconductor-genomeinfodbdata = "*"  # data package DESeq2 needs
 bioconductor-fgsea = "*"             # gene set enrichment analysis
 r-msigdbr = "*"                      # MSigDB gene sets (Hallmark, GO)
