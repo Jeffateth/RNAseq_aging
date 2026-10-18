@@ -1,6 +1,6 @@
 #!/bin/bash
 # Login node, after 00_setup.sh and 01_download.sh: build the three references/indices, then process all 27 runs.
-#   light array: FastQC + fastp + kallisto (4 GB per core; measured: 4-13 min per run, peak 3-23.7 GB incl. conversion and trimming; 2 GB per core is too little)
+#   light array: FastQC (raw and trimmed reads) + fastp + kallisto (4 GB per core; measured: 4-13 min per run, peak 3-23.7 GB incl. conversion and trimming; 2 GB per core is too little)
 #                starts when the kallisto index is ready
 #   STAR array:  fastp + STAR (~30 GB RAM each),           starts when the STAR index is ready
 #   RSEM array:  RSEM on STAR's alignments (3 GB per core, 13-97 min per run), task i starts when STAR task i is done.
@@ -16,7 +16,7 @@ kidx=$(sbatch --parsable "$REPO/euler/02b_kallisto_index.sh")
 sidx=$(sbatch --parsable "$REPO/euler/02_star_index.sh")
 ridx=$(sbatch --parsable "$REPO/euler/02c_rsem_reference.sh")
 light=$(sbatch --parsable --dependency=afterok:"$kidx" --job-name=qc_kallisto --mem-per-cpu=4G --time=02:00:00 \
-        --export=ALL,STAGES="qc+kallisto" "$REPO/euler/03_process_array.sh")
+        --export=ALL,STAGES="qc+qctrim+kallisto" "$REPO/euler/03_process_array.sh")
 star=$(sbatch --parsable --dependency=afterok:"$sidx" --array="$RANGE%6" --job-name=star \
        --export=ALL,STAGES="star" "$REPO/euler/03_process_array.sh")
 rsem=$(sbatch --parsable --dependency=aftercorr:"$star",afterok:"$ridx" --array="$RANGE%6" --job-name=rsem --mem-per-cpu=3G \

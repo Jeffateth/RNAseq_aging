@@ -4,8 +4,8 @@ Contents
   Setup and paths ..... ROOT, SRA, TMP, QC, KALLISTO, STAR, RSEM; load_runs() reads metadata/samples.csv
   Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
   Checks .............. status, check_consistent, qc_summary (kallisto + fastp), check_rsem
-  QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts)
-  Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter)
+  QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts), fastqc_metrics (the numbers behind them); raw or trimmed reads
+  Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter), tail_check (poly-A / poly-G runs before and after trimming)
 Terms: docs/glossary.md."""
 import os
 import shutil
@@ -87,38 +87,87 @@ def download_run(srr: str):
     print(f"{srr}.sra present and valid")
 
 
-def multiqc():
-    """One combined report for all FastQC results -> results/qc/multiqc_raw.html"""
-    sh(f"multiqc -q -f -o {QC} -n multiqc_raw {QC / 'raw'}", "multiqc")
-    return QC / "multiqc_raw.html"
+def _fastqc_zip(s, m, which):
+    """Path of the FastQC report of run s, mate m: `which` = "raw" (reads as sequenced) or "trimmed" (after fastp)."""
+    return QC / which / (f"{s}_{m}_fastqc.zip" if which == "raw" else f"{s}_trim_{m}_fastqc.zip")
+
+
+def multiqc(which="raw"):
+    """One combined report for all FastQC results of `which` ("raw" or "trimmed") -> results/qc/multiqc_<which>.html"""
+    sh(f"multiqc -q -f -o {QC} -n multiqc_{which} {QC / which}", "multiqc")
+    return QC / f"multiqc_{which}.html"
 
 
 KEY_MODULES = ["Per base sequence quality", "Per sequence quality scores", "Adapter Content",
                "Overrepresented sequences", "Sequence Duplication Levels"]
 
 
-def fastqc_summary(srrs, modules=KEY_MODULES) -> pd.DataFrame:
+def fastqc_summary(srrs, modules=KEY_MODULES, which="raw") -> pd.DataFrame:
     """FastQC PASS/WARN/FAIL for the key modules (rows: run_mate)."""
     import zipfile
     rows = {}
     for s in srrs:
         for m in (1, 2):
-            z = QC / "raw" / f"{s}_{m}_fastqc.zip"
+            z = _fastqc_zip(s, m, which)
             if z.is_file():
                 with zipfile.ZipFile(z) as zf:
-                    txt = zf.read(f"{s}_{m}_fastqc/summary.txt").decode()
+                    txt = zf.read(next(n for n in zf.namelist() if n.endswith("summary.txt"))).decode()
                 rows[f"{s}_{m}"] = {l.split("\t")[1]: l.split("\t")[0] for l in txt.splitlines()}
     return pd.DataFrame(rows).T[modules] if rows else pd.DataFrame(columns=modules)
+
+
+def fastqc_metrics(srrs, which="raw") -> pd.DataFrame:
+    """The numbers behind FastQC's verdicts, one row per read file (run_mate), from the reports of `which` ("raw" or "trimmed").
+    base_median_min / base_lowerq_min / base_mean_min: lowest median / lower quartile / mean base quality over read positions (Phred);
+    seq_mean_q: most common mean quality per read (Phred); nextera_max, polyA_max, polyG_max: highest share of reads (%) with that adapter-table
+    entry at any position; overrep_top: share of reads (%) of the most common overrepresented sequence; dedup_pct: % of reads remaining after
+    deduplication (FastQC's estimate from the first 100,000 reads; depends on file size)."""
+    import zipfile
+    rows = {}
+    for s in srrs:
+        for m in (1, 2):
+            z = _fastqc_zip(s, m, which)
+            if not z.is_file():
+                continue
+            with zipfile.ZipFile(z) as zf:
+                t = zf.read(next(n for n in zf.namelist() if n.endswith("fastqc_data.txt"))).decode().split("\n")
+
+            def section(title):
+                out, hdr, on = [], None, False
+                for line in t:
+                    if line.startswith(">>" + title):
+                        on = True
+                    elif on and line.startswith(">>END_MODULE"):
+                        break
+                    elif on and line.startswith("#"):
+                        hdr = line.lstrip("#").split("\t")
+                    elif on:
+                        out.append(line.split("\t"))
+                return hdr, out
+            _, pb = section("Per base sequence quality")
+            _, ps = section("Per sequence quality scores")
+            hdr, ad = section("Adapter Content")
+            _, ov = section("Overrepresented sequences")
+            adapt = {c: max(float(r[j]) for r in ad) for j, c in enumerate(hdr) if j}
+            rows[f"{s}_{m}"] = {
+                "base_median_min": min(float(r[2]) for r in pb), "base_lowerq_min": min(float(r[3]) for r in pb),
+                "base_mean_min": round(min(float(r[1]) for r in pb), 2),
+                "seq_mean_q": float(max(ps, key=lambda r: float(r[1]))[0]),
+                "nextera_max": adapt["Nextera Transposase Sequence"], "polyA_max": adapt["PolyA"], "polyG_max": adapt["PolyG"],
+                "overrep_top": max((float(r[2]) for r in ov), default=0.0),
+                "dedup_pct": round(float(next(l for l in t if l.startswith("#Total Deduplicated Percentage")).split("\t")[1]), 1)}
+    return pd.DataFrame(rows).T
 
 
 NEXTERA = {1: "CTGTCTCTTATACACATCTCCGAGCCCACGAGAC", 2: "CTGTCTCTTATACACATCTGACGCTGCCGACGA"}
 
 
-def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFrame:
+def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=10) -> pd.DataFrame:
     """Evidence that what fastp cuts is the library adapter, and what happens to poly-G tails (first n_pairs read pairs).
     Per mate: share of reads with the adapter's first 12 bases (and how many are expected by chance), whether the bases after
-    them continue this mate's own adapter, and the fate of reads with >= 12 G in a row after adapter trimming ALONE (no --trim_poly_g, unlike trim()): this shows what
-    the adapter cut leaves behind, the reason poly-G trimming is switched on in the pipeline."""
+    them continue this mate's own adapter, and the fate of poly-G reads (a tail of >= `polyg_len` G at the read end, fastp's own rule) after adapter trimming
+    ALONE (no --trim_poly_g, unlike the pipeline): this shows what the adapter cut leaves behind, the reason poly-G trimming is switched on."""
+    import re
     tmp = TMP / f"adcheck_{srr}"
     tmp.mkdir(exist_ok=True)
     sh(f"fastq-dump -X {n_pairs} --split-files -O {tmp} {SRA / srr / (srr + '.sra')}", srr)
@@ -134,7 +183,7 @@ def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFr
         return out
 
     mism = lambda a, b: sum(x != y for x, y in zip(a, b))
-    G, rows = "G" * polyg_len, []
+    g_tail, rows = re.compile(f"G{{{polyg_len},}}$"), []
     for m in (1, 2):
         raw, kept = read(f"{tmp}/{srr}_{m}.fastq"), read(f"{tmp}/t_{m}.fq")
         own, other = NEXTERA[m], NEXTERA[3 - m]
@@ -147,10 +196,10 @@ def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFr
                 continue
             a, b = mism(tail, own[19:19 + len(tail)]), mism(tail, other[19:19 + len(tail)])
             cls["own" if a <= 1 < b else "other" if b <= 1 < a else "neither"] += 1
-        pg = [n for n, q in raw.items() if G in q]
-        after_ad = [n for n in pg if motif in raw[n] and raw[n].index(motif) < raw[n].index(G)]
+        pg = [n for n, q in raw.items() if g_tail.search(q)]
+        after_ad = [n for n in pg if motif in raw[n] and raw[n].index(motif) < g_tail.search(raw[n]).start()]
         dropped = sum(n not in kept for n in pg)
-        still = sum(n in kept and G in kept[n] for n in pg)
+        still = sum(n in kept and bool(g_tail.search(kept[n])) for n in pg)
         pct = lambda x, d: round(100 * x / max(d, 1), 1)
         rows.append({"mate": m, "reads": len(raw), "adapter_start_%": pct(len(hit), len(raw)),
                      "expected_by_chance_reads": round(len(raw) * (150 - motif_len + 1) / 4 ** motif_len, 1),
@@ -161,6 +210,32 @@ def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=12) -> pd.DataFr
                      "polyG_remaining_%": pct(still, len(pg))})
     shutil.rmtree(tmp)
     return pd.DataFrame(rows).set_index("mate")
+
+
+def tail_check(srr, n_pairs=600_000, run=12) -> pd.DataFrame:
+    """Homopolymer runs in the first n_pairs read pairs, before and after fastp (same settings as the pipeline).
+    Columns (% of reads): `A_run` / `T_run` = a run of >= `run` A / T anywhere (poly-T is poly-A on the other strand; the library is unstranded);
+    `ends_in_A` = read ends in >= 10 A; `starts_with_T` = begins with >= 10 T; `ends_in_G` = read ends in >= 10 G (the poly-G tail fastp trims)."""
+    import re
+    tmp = TMP / f"polya_{srr}"
+    tmp.mkdir(exist_ok=True)
+    sh(f"fastq-dump -X {n_pairs} --split-files -O {tmp} {SRA / srr / (srr + '.sra')}", srr)
+    sh(f"fastp -i {tmp}/{srr}_1.fastq -I {tmp}/{srr}_2.fastq -o {tmp}/t_1.fq -O {tmp}/t_2.fq "
+       f"--detect_adapter_for_pe --trim_poly_g --length_required 20 --thread 4 --json /dev/null --html /dev/null", srr)
+    pats = {"A_run": re.compile(f"A{{{run},}}"), "T_run": re.compile(f"T{{{run},}}"), "ends_in_A": re.compile("A{10,}$"), "starts_with_T": re.compile("^T{10,}"), "ends_in_G": re.compile("G{10,}$")}
+    rows = {}
+    for label, name in (("raw", f"{srr}_%d.fastq"), ("trimmed", "t_%d.fq")):
+        for mate in (1, 2):
+            n, hits = 0, dict.fromkeys(pats, 0)
+            with open(tmp / (name % mate)) as f:
+                for i, line in enumerate(f):
+                    if i % 4 == 1:
+                        n += 1
+                        for k, rx in pats.items():
+                            hits[k] += bool(rx.search(line.strip()))
+            rows[f"{label} mate {mate}"] = {"reads": n} | {k: round(100 * v / n, 2) for k, v in hits.items()}
+    shutil.rmtree(tmp)
+    return pd.DataFrame(rows).T
 
 
 def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
@@ -188,11 +263,11 @@ EULER = ROOT / "results/euler"      # put the tarballs from euler/04_collect.sh 
 
 
 def unpack_euler(src: Path = EULER):
-    """Unpack the tarballs from euler/04_collect.sh: kallisto_results, rsem_results and qc_results into results/ (-> results/kallisto,
-    results/rsem, results/qc), star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
+    """Unpack the tarballs from euler/04_collect.sh: kallisto_results, rsem_results, qc_results and qc_trimmed_results into results/ (-> results/kallisto,
+    results/rsem, results/qc, results/qc/trimmed), star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
     import tarfile
     targets = {"kallisto_results.tar.gz": ROOT / "results", "rsem_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results",
-               "star_results.tar.gz": ROOT / "results/star"}
+               "qc_trimmed_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star"}
     for name, dest in targets.items():
         f = next((p for p in (src / name, ROOT / "results/star" / name) if p.is_file()), None)    # star tarball may sit in results/star/
         if f is None:

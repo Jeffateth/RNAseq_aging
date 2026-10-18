@@ -10,7 +10,7 @@ echo "== 1. jobs still queued or running"
 q=$(squeue -u "$USER" -h 2>/dev/null | wc -l); [[ $q -eq 0 ]] && echo "OK: none" || problem "$q jobs in the queue (squeue -u \$USER)"
 
 echo "== 2. every run has every result (missing runs listed)"
-for spec in "STAR:$MAP/%s/Log.final.out" "kallisto:$KAL/%s/abundance.h5" "RSEM:$RSEM/%s/%s.genes.results" "FastQC:$QC/raw/%s_2_fastqc.zip" "fastp:$QC/%s.fastp.json"; do
+for spec in "STAR:$MAP/%s/Log.final.out" "kallisto:$KAL/%s/abundance.h5" "RSEM:$RSEM/%s/%s.genes.results" "FastQC:$QC/raw/%s_2_fastqc.zip" "FastQC-trimmed:$QC/trimmed/%s_trim_2_fastqc.zip" "fastp:$QC/%s.fastp.json"; do
   name=${spec%%:*}; pat=${spec#*:}; miss=""; n=0
   for s in $(cat "$REPO/metadata/srr_list.txt"); do
     f=${pat//%s/$s}; [[ -s "$f" ]] && n=$((n+1)) || miss="$miss $s"
