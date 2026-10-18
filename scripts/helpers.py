@@ -5,7 +5,7 @@ Contents
   Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
   Checks .............. status, check_consistent, qc_summary (kallisto + fastp), check_rsem
   QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts), fastqc_metrics (the numbers behind them); raw or trimmed reads
-  Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter), tail_check (poly-A / poly-G runs before and after trimming)
+  Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter), tail_check (poly-A / poly-G runs before and after trimming), tail_anatomy (where the parts of a poly-G read lie)
 Terms: docs/glossary.md."""
 import os
 import shutil
@@ -212,6 +212,36 @@ def adapter_check(srr, n_pairs=600_000, motif_len=12, polyg_len=10) -> pd.DataFr
     return pd.DataFrame(rows).set_index("mate")
 
 
+def tail_anatomy(srr, n_pairs=600_000, motif_len=12, polyg_len=10) -> pd.DataFrame:
+    """Where the parts of a read with a poly-G tail lie (first n_pairs read pairs, raw reads, only reads whose adapter comes before the G tail).
+    Per mate, median [middle half] in bases: `insert` = bases before the adapter, `adapter_to_tail` = adapter start to G-tail start (adapter +
+    barcode + rest of the library construct), `G_tail` = length of the G tail; `barcode_share_%` = reads with the commonest 8 bases right after the adapter."""
+    import re
+    import statistics as st
+    from collections import Counter
+    tmp = TMP / f"anat_{srr}"
+    tmp.mkdir(exist_ok=True)
+    sh(f"fastq-dump -X {n_pairs} --split-files -O {tmp} {SRA / srr / (srr + '.sra')}", srr)
+    g_tail, rows = re.compile(f"G{{{polyg_len},}}$"), {}
+    for m in (1, 2):
+        motif, alen = NEXTERA[m][:motif_len], len(NEXTERA[m])
+        ins, span, tail, bar = [], [], [], Counter()
+        with open(tmp / f"{srr}_{m}.fastq") as f:
+            for i, line in enumerate(f):
+                if i % 4 == 1:
+                    q = line.strip(); g = g_tail.search(q)
+                    a = q.find(motif)
+                    if g and 0 <= a < g.start():
+                        ins.append(a); span.append(g.start() - a); tail.append(len(q) - g.start())
+                        if a + alen + 8 <= g.start():
+                            bar[q[a + alen:a + alen + 8]] += 1
+        iqr = lambda v: f"{st.median(v):.0f} [{st.quantiles(v, n=4)[0]:.0f}-{st.quantiles(v, n=4)[2]:.0f}]"
+        rows[f"mate {m}"] = {"reads": len(ins), "adapter_length": alen, "insert": iqr(ins), "adapter_to_tail": iqr(span), "G_tail": iqr(tail),
+                             "barcode_share_%": round(100 * bar.most_common(1)[0][1] / sum(bar.values()))}
+    shutil.rmtree(tmp)
+    return pd.DataFrame(rows).T
+
+
 def tail_check(srr, n_pairs=600_000, run=12) -> pd.DataFrame:
     """Homopolymer runs in the first n_pairs read pairs, before and after fastp (same settings as the pipeline).
     Columns (% of reads): `A_run` / `T_run` = a run of >= `run` A / T anywhere (poly-T is poly-A on the other strand; the library is unstranded);
@@ -269,8 +299,8 @@ def unpack_euler(src: Path = EULER):
     targets = {"kallisto_results.tar.gz": ROOT / "results", "rsem_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results",
                "qc_trimmed_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star"}
     for name, dest in targets.items():
-        f = next((p for p in (src / name, ROOT / "results/star" / name) if p.is_file()), None)    # star tarball may sit in results/star/
-        if f is None:
+        f = src / name
+        if not f.is_file():
             print(f"not found: {name}")
             continue
         dest.mkdir(parents=True, exist_ok=True)

@@ -14,7 +14,7 @@
 # Stages whose output already exists are skipped, so a rerun does only what is missing. submit.sh runs two arrays:
 # a light one ("qc+qctrim+kallisto", 4 GB per core), a STAR one ("star", ~30 GB for the genome index) and an RSEM one ("rsem", 3 GB per core;
 # RSEM takes 40-90 min per run, so it is kept out of the STAR tasks that reserve 48 GB).
-# fastp settings are identical to the laptop pipeline (scripts/helpers.py: trim).
+# fastp: adapters detected from the read pair, poly-G tails trimmed, reads < 20 bases dropped, default quality filter; duplicates are NOT removed (no --dedup).
 set -euo pipefail
 source "${REPO:-$HOME/RNAseq_aging}/euler/common.sh"
 STAGES="${STAGES:-qc+qctrim+kallisto+star+rsem}"

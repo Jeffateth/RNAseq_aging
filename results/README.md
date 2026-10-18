@@ -7,7 +7,7 @@ Small outputs are kept in git; large or regenerable files are git-ignored. Terms
 | `qc/` | fastp report per run (`<SRR>.fastp.json`; the `.html` is regenerated), `polyG_sensitivity_SRR21355398.csv` (genes whose kallisto counts changed > 5 % with poly-G trimming, one-run test); `qc/raw/`, `qc/trimmed/`, `multiqc_raw.html`: FastQC of the raw and of the trimmed reads | json, csv |
 | `kallisto/`, `rsem/` | per-run kallisto and RSEM output from Euler (notebook 01) | no |
 | `star/` | `counts_unstranded.csv.gz` (STAR counts, genes × runs) and `star_qc.csv` (per run: `input_pairs_M`, `unique_%`, `multi_%`, `STAR_assigned_to_gene_%`, `frac_read1_same_strand` ≈ 0.5 = unstranded) | yes |
-| `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 | no |
+| `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 (RSEM) | no |
 | `compare/` | kallisto vs STAR vs RSEM (notebook 04) | summary tables |
 | `aging_vs_rejuvenation/` | the main analysis (notebook 05) | yes |
 
@@ -28,7 +28,7 @@ Every comparison is *first group vs second*; **positive** log2FC or NES = **high
 - `signature_score_tests.csv`: `treated`, `control`, `n_t`, `n_c`, `diff` (treated − control; **negative = rejuvenating direction**), `t_test_p` (Welch, rough with 3–5 mice).
 - `gsea_hallmark.csv`: one row per method × comparison × Hallmark set (50 × 3 × 3 = 450): `pathway`, `pval`, `padj` (over the 50 sets), `ES`, `NES` (**positive = pathway up in the first group**), `size`, `log2err` (ignore). Example: `aging_21v3`, `HALLMARK_INTERFERON_ALPHA_RESPONSE`, NES +2.5, padj < 0.05 = interferon genes are higher in 21- than in 3-month mice.
 - `gsea_concordance.csv`: of the sets significant in aging, per collection (`Hallmark`, `GO_BP`) × method × treatment: `aging_sets`, `significant_in_both`, `reversed`, `same_direction`, `NES_spearman_all_sets` (negative = reversal).
-- `paper_CAS_named_genes.csv`: the paper's Fig. 2B aging genes with `lfc_*` / `padj_*` for aging, aDR, YMP (method set in `SHOW`, default kallisto).
+- `paper_CAS_named_genes.csv`: the paper's Fig. 2B aging genes with `lfc_*` / `padj_*` for aging, aDR, YMP (method set in `SHOW`, default RSEM).
 
 **`compare/`:**
 - `counts_per_sample.csv`: `spearman_<a>_<b>` per pair of methods and total counts in millions per method (STAR counts only unique reads, so its total is lower).

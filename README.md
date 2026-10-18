@@ -4,18 +4,20 @@
 
 **Data.** 27 bulk RNA-seq samples (one mouse each) from Hahn *et al.*, *Cell* 2023: 12 aging mice (3, 18, 21 months) and 15 mice of a 19-month rejuvenation experiment, re-processed from the raw reads ([docs/data.md](docs/data.md)).
 
-**Approach.** reads → QC and trimming → gene counts by three counting methods (kallisto; STAR; RSEM on STAR's alignments), GENCODE M39 / GRCm39 → DESeq2 → treatment effects compared with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
+**Approach.** reads → QC and trimming → gene counts from STAR alignments with RSEM (kallisto and STAR GeneCounts as sensitivity checks), GENCODE M39 / GRCm39 → DESeq2 → treatment effects compared with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
 
 ## Main results (cerebellum)
-The three methods are shown as kallisto / STAR / RSEM; they agree in direction everywhere. Which one is primary is decided on the evidence in [docs/pipeline.md](docs/pipeline.md#choosing-the-counting-method) (pending).
+Method: STAR alignments with RSEM quantification (GENCODE M39); the choice is explained in [docs/pipeline.md](docs/pipeline.md#choosing-the-counting-method).
 
 | | aDR vs AL (9 females) | YMP vs PBS (6 males) |
 |---|---|---|
-| Differentially expressed genes (DEGs) | 139 (64 up) / 185 (70 up) / 118 (46 up) | 41 (17 up) / 26 (9 up) / 50 (22 up) |
-| DEGs shared with aging (21 vs 3 months: 134 / 168 / 116 DEGs) | 6 / 13 / 5 (1.0 / 2.0 / 1.0 expected by chance); **like aging** 6 / 12 / 5, opposite 0 / 1 / 0 | 2 / 3 / 2 (0.3 expected); all **opposite** to aging |
-| log2 fold-change correlation with aging, among aging DEGs | **+0.39 / +0.48 / +0.44** (aging-like) | **−0.48 / −0.41 / −0.33** (reversal) |
-| Aging-signature score, treated minus control (Welch p) | **+0.73 / +0.77 / +0.82** (p = 0.016 / 0.018 / 0.011) | **−0.79 / −0.73 / −0.82** (p = 0.004 / 0.048 / 0.043) |
-| Hallmark pathways significant in aging and in the treatment | 8 / 7 / 7: reversed 5 / 4 / 5, same 3 / 3 / 2 | 14 / 15 / 11: **reversed 11 / 13 / 10**, same 3 / 2 / 1 |
+| Differentially expressed genes (DEGs) | 118 (46 up, 72 down) | 50 (22 up, 28 down) |
+| DEGs shared with aging (21 vs 3 months: 116 DEGs) | 5 (1.0 expected by chance), all **like aging** | 2 (0.3 expected), both **opposite** to aging |
+| log2 fold-change correlation with aging, among aging DEGs | **+0.44** (aging-like) | **−0.33** (reversal) |
+| Aging-signature score, treated minus control (Welch p) | **+0.82** (p = 0.011) | **−0.82** (p = 0.043) |
+| Hallmark pathways significant in aging and in the treatment | 7: reversed 5, same 2 | 11: **reversed 10**, same 1 |
+
+kallisto and STAR GeneCounts, run as sensitivity checks, give different counts (for example 139 and 185 DEGs for aDR, 41 and 26 for YMP) but the **same direction in every row**; their numbers are in `results/aging_vs_rejuvenation/`.
 
 - **Young plasma reverses part of the cerebellar aging signal:** interferon-response pathways (up in aging) go down; mTORC1, fatty-acid and cholesterol metabolism, p53, hypoxia and oxidative phosphorylation (down in aging) go up.
 - **Dietary restriction does not:** it induces the circadian-clock genes the paper reports (19 of 23 up in all three methods; Cry1, Dbp, Ciart, Cirbp) and reverses some pathways, but not the interferon response, and its aging-signature score rises.
@@ -28,7 +30,7 @@ Run in numerical order. The heavy steps (QC, trimming, kallisto, STAR, RSEM) run
 |---|---|---|---|
 | 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | **runs the heavy steps on Euler** and copies the results back; the cluster commands and scripts (`euler/`) are described here |
 | 02 | [qc_trimming](notebooks/02_qc_trimming.ipynb) | Python | QC and trimming decisions, with the evidence (FastQC verdicts, adapter and poly-G check) |
-| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (method set in `METHOD`) |
+| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (RSEM; `METHOD` switches it) |
 | 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | agreement of the three methods and the evidence for choosing one |
 | 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways |
 
@@ -38,7 +40,7 @@ Run in numerical order. The heavy steps (QC, trimming, kallisto, STAR, RSEM) run
 3. **Processing:** `euler/submit.sh` → `euler/05_check.sh` → `euler/04_collect.sh`, then copy the tarballs to `results/euler/` (commands in notebook 01).
 4. **Analysis:** notebooks 01–05 in order. The pathway tests are seeded; the MSigDB gene sets are fetched on first use, so a later MSigDB release can change pathway results.
 
-The cluster scripts are plain bash and SLURM, so they can run on any SLURM cluster (not tested elsewhere). To skip steps 2–3, use the four tarballs of the run reported here (`results/euler/`, not in git; SHA-256 checksums can be made with `shasum -a 256`). A few exploratory one-run tests quoted in `docs/pipeline.md` (marked there) are not scripted.
+The cluster scripts are plain bash and SLURM, so they can run on any SLURM cluster (not tested elsewhere). For the primary analysis only the RSEM result is needed (`rsem_results.tar.gz`, 72 MB, plus the STAR counts already in git); notebooks 04 and 05 also read kallisto and STAR for the sensitivity checks. To skip steps 2–3, use the tarballs of the run reported here (`results/euler/`, not in git; SHA-256 checksums can be made with `shasum -a 256`). A few exploratory one-run tests quoted in `docs/pipeline.md` (marked there) are not scripted.
 
 ## Run it
 ```bash

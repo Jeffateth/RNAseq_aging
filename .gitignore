@@ -14,8 +14,6 @@ results/qc/raw/
 results/qc/multiqc_raw.html
 results/qc/multiqc_raw_data/
 results/star/mapping/
-results/star/qc/
-results/star/*.tar.gz
 results/de/
 results/compare/star_*.csv
 results/compare/rsem_*.csv

@@ -14,6 +14,6 @@ Each treatment is compared only with its own control: the controls differ in sex
 
 **Identifiers.** BioProject (PRJNA…) = a study; GEO series (GSE…) / sample (GSM…) = the same in the Gene Expression Omnibus; BioSample (SAMN…) = the biological sample; **SRR** = one sequencing run, the unit we download; mouse ID = the paper's animal number (in sample titles, "…37ID").
 
-**Metadata (`metadata/`).** `samples.csv` has one row per run (SRR, GSM, BioSample, sex, age, mouse ID, group, depth) and is the file all code reads. It is built by `scripts/build_metadata.py` from `runinfo_raw.csv` and `biosample_raw.csv` (NCBI tables as fetched); `srr_list.txt` lists the 27 runs.
+**Metadata (`metadata/`).** `samples.csv` has one row per run (SRR, GSM, BioSample, sex, age, mouse ID, group, depth) and is the file all code reads. It is built by `scripts/build_metadata.py` from `runinfo_raw.csv` and `biosample_raw.csv` (NCBI tables as fetched); `srr_list.txt` lists the 27 runs. `genes_M39.csv` maps each GENCODE M39 gene id to its symbol (built by `scripts/build_genes.py` from the transcript names).
 
 **Not used.** The other 14 regions, the paper's single-nucleus and spatial data, and the authors' GEO count tables. The paper's full 82-gene "common aging score" list (its Table S1) was not available, so we use the genes named in its figures.

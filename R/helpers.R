@@ -1,7 +1,7 @@
 # R helpers for notebooks 03, 04, 05 (run them from notebooks/; paths are relative to the repo root).
 #
 # Contents (functions grouped by purpose)
-#   Load data ........ load_samples, load_txi (kallisto), load_rsem, load_star_counts, subset_txi
+#   Load data ........ load_samples, load_genes, load_rsem, load_star_counts, load_txi (kallisto), subset_txi
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables
 #   Explore .......... pca_plot, outlier_genes
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
@@ -22,6 +22,9 @@ load_samples <- function() {
            sex = factor(sex)) %>%
     column_to_rownames("srr")
 }
+
+#' Gene id -> symbol table of GENCODE M39 (metadata/genes_M39.csv, built by scripts/build_genes.py).
+load_genes <- function() read_csv(file.path(ROOT, "metadata/genes_M39.csv"), show_col_types = FALSE)
 
 #' kallisto -> gene-level counts (tximport). Transcript ids are GENCODE headers "tx|gene|...|symbol|..."
 load_txi <- function(srr) {

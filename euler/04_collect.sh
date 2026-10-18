@@ -1,11 +1,11 @@
 #!/bin/bash
-# Pack the results for copying to the laptop (four tarballs in $WORK). Paths inside are relative and carry no _M39 suffix, so the
+# Pack the results for copying to the laptop (five tarballs in $WORK). Paths inside are relative and carry no _M39 suffix, so the
 # laptop side stays reference-independent:
 #   star_results.tar.gz      mapping/<SRR>/  STAR gene counts + mapping logs (~11 MB)
 #   kallisto_results.tar.gz  kallisto/<SRR>/ kallisto estimates per run (~0.6 GB)
 #   rsem_results.tar.gz      rsem/<SRR>/     RSEM gene-level results per run (~70 MB packed)
 #   qc_results.tar.gz        qc/             FastQC zips (raw reads) + fastp reports (~tens of MB)
-#   qc_trimmed_results.tar.gz qc/trimmed/    FastQC zips of the trimmed reads (separate, so the four tarballs above stay as they were)
+#   qc_trimmed_results.tar.gz qc/trimmed/    FastQC zips of the trimmed reads (a separate file, so the four above stay as they were)
 set -euo pipefail
 source "${REPO:-$HOME/RNAseq_aging}/euler/common.sh"
 cd "$WORK"

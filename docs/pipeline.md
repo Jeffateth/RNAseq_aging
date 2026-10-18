@@ -21,7 +21,7 @@ Each step with the choice made and why. † = tested or checked on the data. Ter
 | 10 | **Aging vs treatment** | signature = 21 vs 3 month DEGs; (i) DEG overlap and direction (Fisher); (ii) per-mouse signature score, z-scored **within each treated/control pair**, Welch t-test; (iii) fgsea on the Wald statistic (Hallmark, GO:BP); (iv) the paper's named genes | the paper's full 82-gene list was not available. A rank test cannot reach p < 0.1 with 3 vs 3 mice, hence Welch; p-values are indicative |
 
 ### Choosing the counting method
-No method is assumed best. Notebook 04 (section 5) measures the criteria below, saved to `results/compare/method_evidence.csv`. No single one decides; a method is a poor choice only if clearly worse on several.
+No method is assumed best. Notebook 04 (section 4) measures the criteria below, saved to `results/compare/method_evidence.csv`. No single one decides; a method is a poor choice only if clearly worse on several.
 
 | Criterion | Measures | Better | Caveat |
 |---|---|---|---|
@@ -35,10 +35,13 @@ No method is assumed best. Notebook 04 (section 5) measures the criteria below, 
 
 Practical: kallisto needs only the transcript sequences (index 11 min, 4–13 min per run, peak 3–23.7 GB); STAR needs ~30 GB for its index (22 min) and takes 5–13 min per run; RSEM needs STAR's alignments plus a reference (13–97 min per run, peak 6–14.8 GB). References (check before citing): Bray *et al.* 2016 *Nat Biotechnol* 34:525 (kallisto); Li & Dewey 2011 *BMC Bioinformatics* 12:323 (RSEM); Soneson, Love & Robinson 2015 *F1000Research* 4:1521 (tximport).
 
-**Decision:** pending; record the chosen method and its evidence here. Until then notebook 03 uses `METHOD`, notebook 05 draws figures for `SHOW`, and its tables cover all three.
+**Decision (18 October 2026): STAR alignments with RSEM.**
+- **Isoform-aware.** RSEM shares reads that fit several isoforms and corrects for gene length; STAR `GeneCounts` drops multi-mapping and ambiguous reads and cannot, so it is not used as the primary result.
+- **Alignment-based,** with the tutorial's route and the paper's aligner (STAR).
+- **The evidence did not separate RSEM from kallisto.** Every shared DEG has the same direction, replicate agreement and the positive controls are equal. kallisto counted more reads (69 % of pairs against 55 %) and has lower dispersion, but without a known truth that cannot show accuracy, and the two measures are not on the same level.
+- **kallisto and STAR `GeneCounts` are kept as sensitivity checks:** they give the same biological conclusion.
 
-### How kallisto gets to gene counts
-kallisto works on **transcripts**; which transcript belongs to which gene comes from the annotation (M39: 481,956 transcripts of 78,289 genes; each transcript name carries its gene id). It (1) indexes the transcript sequences once, (2) pseudoaligns each read pair to the transcripts it is compatible with without placing it on the genome, (3) estimates reads per transcript, sharing reads that fit several isoforms by EM. `tximport` then sums a gene's transcripts (e.g. isoforms of 800 and 200 reads give a gene of 1,000).
+Notebook 03 runs on RSEM (`METHOD`) and notebook 05 draws its figures for RSEM (`SHOW`); both switches can be changed to repeat the analysis with another method.
 
 ### fastp vs cutadapt † (one run, SRR21355398, early exploratory test on vM25; not scripted in the repo)
 | Trimming | Pairs left | Pseudoaligned |
