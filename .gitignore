@@ -11,8 +11,8 @@ raw_data/
 results/kallisto/
 results/logs/
 results/qc/raw/
-results/qc/multiqc_raw.html
-results/qc/multiqc_raw_data/
+results/qc/trimmed/
+results/qc/multiqc_*
 results/star/mapping/
 results/de/
 results/compare/star_*.csv

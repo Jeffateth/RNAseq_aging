@@ -1,6 +1,6 @@
 #!/bin/bash
 # Once, on the Euler login node:  git clone https://github.com/Jeffateth/RNAseq_aging && bash RNAseq_aging/euler/00_setup.sh
-# Safe to re-run: creates the environment `rnaseq_star`, or adds/updates these packages in it (e.g. to add kallisto and FastQC).
+# Safe to re-run: creates the environment `rnaseq_star`, or adds/updates these packages in it.
 # --override-channels: only conda-forge + bioconda, so conda's Terms-of-Service check on its default channels is not triggered.
 # Versions are pinned to what the results were produced with (sra-tools 3.1 is also what the tutorial needs).
 set -euo pipefail

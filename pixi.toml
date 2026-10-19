@@ -27,3 +27,4 @@ bioconductor-tximport = "*"          # transcript estimates -> gene counts
 bioconductor-genomeinfodbdata = "*"  # data package DESeq2 needs
 bioconductor-fgsea = "*"             # gene set enrichment analysis
 r-msigdbr = "*"                      # MSigDB gene sets (Hallmark, GO)
+matplotlib = ">=3.10.9,<4"

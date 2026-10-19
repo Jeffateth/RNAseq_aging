@@ -4,7 +4,7 @@ Contents
   Setup and paths ..... ROOT, SRA, TMP, QC, KALLISTO, STAR, RSEM; load_runs() reads metadata/samples.csv
   Euler results ....... unpack_euler (tarballs copied back from the cluster), load_star (STAR counts + mapping statistics)
   Checks .............. status, check_consistent, qc_summary (kallisto + fastp), check_rsem
-  QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts), fastqc_metrics (the numbers behind them); raw or trimmed reads
+  QC reports .......... multiqc (combined FastQC report), fastqc_summary (FastQC verdicts), fastqc_metrics (the numbers behind them), plot_adapter_effect (slide figure); raw or trimmed reads
   Adapter check ....... download_run (one .sra), adapter_check (evidence that fastp cuts the library adapter), tail_check (poly-A / poly-G runs before and after trimming), tail_anatomy (where the parts of a poly-G read lie)
 Terms: docs/glossary.md."""
 import os
@@ -268,6 +268,38 @@ def tail_check(srr, n_pairs=600_000, run=12) -> pd.DataFrame:
     return pd.DataFrame(rows).T
 
 
+def plot_adapter_effect(raw: pd.DataFrame, trimmed: pd.DataFrame, out=None):
+    """One slide figure: Nextera adapter content (% of reads, highest value at any read position) of every read file, raw vs trimmed,
+    with FastQC's FAIL threshold (10 %). `raw` / `trimmed` = fastqc_metrics(..., which=...). Saves out.png (300 dpi) and out.svg if `out` is given.
+    Large type on purpose: it is meant for a slide."""
+    import matplotlib.pyplot as plt
+    import numpy as np
+    plt.rcParams["font.family"] = ["Helvetica Neue", "Helvetica", "Arial", "DejaVu Sans"]
+    ink, soft, grid = "#0b0b0b", "#52514e", "#e6e5e1"
+    blue, orange = "#2a78d6", "#eb6834"          # validated pair (colour-blind safe, contrast >= 3:1 on white)
+    fig, ax = plt.subplots(figsize=(4.6, 5.0), dpi=100)
+    rng = np.random.default_rng(1)
+    for x, d, c in ((0, raw["nextera_max"], blue), (1, trimmed["nextera_max"], orange)):
+        ax.hlines(d.median(), x - 0.4, x + 0.4, color=ink, linewidth=4, zorder=3)
+        ax.scatter(x + rng.uniform(-0.3, 0.3, len(d)), d, s=100, color=c, edgecolor="white", linewidth=1.2, zorder=4)
+    ax.axhline(10, color=soft, linewidth=2, linestyle=(0, (4, 3)), zorder=2)
+    ax.text(1.5, 10.9, "FAIL limit: 10 %", ha="right", va="bottom", fontsize=20, color=soft)
+    for x, word in ((0, "FAIL"), (1, "PASS")):
+        ax.text(x, 39.6, word, ha="center", va="bottom", fontsize=32, fontweight="bold", color=ink)
+        ax.text(x, 36.4, f"{len(raw)}/{len(raw)} files", ha="center", va="bottom", fontsize=20, color=soft)
+    ax.set_xlim(-0.5, 1.5); ax.set_ylim(-2, 46)
+    ax.set_xticks([0, 1]); ax.set_xticklabels(["Raw", "Trimmed"], fontsize=26, color=ink)
+    ax.set_yticks([0, 10, 20, 30]); ax.tick_params(axis="y", labelsize=22, colors=soft, length=0, pad=8); ax.tick_params(axis="x", length=0, pad=10)
+    ax.set_ylabel("Adapter content (% of reads)", fontsize=20, color=soft, labelpad=8)
+    ax.grid(axis="y", color=grid, linewidth=1.5, zorder=0); ax.set_axisbelow(True)
+    for side in ("top", "right", "left"): ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(grid); ax.spines["bottom"].set_linewidth(1.5)
+    fig.tight_layout()
+    if out is not None:
+        fig.savefig(f"{out}.png", dpi=300, bbox_inches="tight"); fig.savefig(f"{out}.svg", bbox_inches="tight")
+    return fig
+
+
 def qc_summary(runs: pd.DataFrame) -> pd.DataFrame:
     """Per-run kallisto pseudoalignment rate (+ fastp read pairs/Q30/duplication if trimmed)."""
     import json
@@ -337,6 +369,30 @@ def load_star(runs: pd.DataFrame, root: Path = STAR):
 
 
 RSEM = ROOT / "results/rsem"
+
+
+def save_rsem_matrices(runs: pd.DataFrame, out=None) -> dict:
+    """Gene x run tables from RSEM's per-run files, small enough for git: `rsem_tpm` (what the tutorial's PCA / clustering use), `rsem_expected_counts`
+    (not whole numbers; DESeq2 rounds them) and `rsem_effective_length` (needed with the counts to rebuild the tximport object). Written to for_teammates/ together with a slim sample table and the gene table."""
+    out = Path(out) if out else ROOT / "for_teammates"
+    out.mkdir(parents=True, exist_ok=True)
+    cols = {"rsem_tpm": "TPM", "rsem_expected_counts": "expected_count", "rsem_effective_length": "effective_length"}
+    tabs = {k: {} for k in cols}
+    for s in runs.index:
+        t = pd.read_csv(RSEM / s / f"{s}.genes.results", sep="\t", index_col="gene_id")
+        for k, c in cols.items():
+            tabs[k][s] = t[c]
+    res = {}
+    for k, d in tabs.items():
+        df = pd.DataFrame(d)
+        df.index.name = "gene_id"
+        df.to_csv(out / f"{k}.csv.gz", float_format="%.6g")
+        res[k] = df.shape
+    shutil.copy(ROOT / "metadata/genes_M39.csv", out / "genes_M39.csv")
+    meta = pd.read_csv(ROOT / "metadata/samples.csv")
+    meta = meta.rename(columns={"experiment_group": "cohort"})
+    meta[["SRR", "group", "age_months", "sex", "cohort", "mouse_id"]].to_csv(out / "samples.csv", index=False)
+    return res
 
 
 def check_rsem(runs: pd.DataFrame) -> pd.DataFrame:

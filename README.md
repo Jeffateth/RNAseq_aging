@@ -42,6 +42,11 @@ Run in numerical order. The heavy steps (QC, trimming, kallisto, STAR, RSEM) run
 
 The cluster scripts are plain bash and SLURM, so they can run on any SLURM cluster (not tested elsewhere). For the primary analysis only the RSEM result is needed (`rsem_results.tar.gz`, 72 MB, plus the STAR counts already in git); notebooks 04 and 05 also read kallisto and STAR for the sensitivity checks. To skip steps 2–3, use the tarballs of the run reported here (`results/euler/`, not in git; SHA-256 checksums can be made with `shasum -a 256`). A few exploratory one-run tests quoted in `docs/pipeline.md` (marked there) are not scripted.
 
+## Data for your own analysis
+Teammates start from [for_teammates/](for_teammates/README.md): the RSEM expression tables, sample table and gene symbols (about 10 MB, in git). RSEM's per-run files (`rsem_results.tar.gz`, 72 MB) are an optional download from the GitHub release; the other tarballs (kallisto 597 MB, STAR, QC) are only for our sensitivity checks and QC notebooks and stay in `results/euler/` (not in git; checksums in `metadata/data_checksums.txt`, `shasum -a 256 -c`).
+
+Not available: the reads (54 GB) and the alignments (BAM files were not kept), so splice-junction analysis would need a rerun of STAR.
+
 ## Run it
 ```bash
 pixi install                              # kallisto, fastp, FastQC, R/Bioconductor, Jupyter (pixi.toml)
@@ -54,7 +59,7 @@ Notebook 01 needs an ETH account and the VPN. Finished work is always skipped, s
 ## Files
 - **Docs:** [docs/data.md](docs/data.md) (study, design, identifiers), [docs/pipeline.md](docs/pipeline.md) (each step and why, method choice), [docs/glossary.md](docs/glossary.md), [results/README.md](results/README.md) (how to read the result tables), [docs/Tutorial.md](docs/Tutorial.md) (the course tutorial this follows, Z. He, ETH Zurich).
 - **Code:** `notebooks/`, `scripts/` (`helpers.py`, `build_metadata.py`), `R/helpers.R`, `euler/` (SLURM scripts), `pixi.toml` / `pixi.lock` (software).
-- **Data:** `metadata/` (sample table, NCBI source tables), `results/` (small outputs in git).
+- **Data:** `for_teammates/` (start here for your own analysis), `metadata/` (sample table, NCBI source tables), `results/` (small outputs in git).
 - **Not in git:** `raw_data/` (one `.sra` for the adapter check), `results/kallisto/`, `results/rsem/`, `results/euler/` (the result tarballs from Euler), FastQC reports.
 
 Paper: Hahn *et al.* 2023, *Cell* 186:4117 ([doi](https://doi.org/10.1016/j.cell.2023.07.027)); authors' code: github.com/OliInTheValley/SpatioTemporal_Analysis.

@@ -1,0 +1,28 @@
+SRR,group,age_months,sex,cohort,mouse_id
+SRR21355401,aging 3mo,3,male,Aging,29
+SRR21355396,aging 3mo,3,male,Aging,33
+SRR21355392,aging 3mo,3,female,Aging,37
+SRR21355388,aging 3mo,3,female,Aging,41
+SRR21355398,aging 18mo,18,male,Aging,31
+SRR21355394,aging 18mo,18,male,Aging,35
+SRR21355390,aging 18mo,18,female,Aging,39
+SRR21355386,aging 18mo,18,female,Aging,43
+SRR21355397,aging 21mo,21,male,Aging,32
+SRR21355393,aging 21mo,21,male,Aging,36
+SRR21355389,aging 21mo,21,female,Aging,40
+SRR21355385,aging 21mo,21,female,Aging,44
+SRR23914577,AL,19,female,Dietary Intervention,63
+SRR23914574,AL,19,female,Dietary Intervention,66
+SRR23914572,AL,19,female,Dietary Intervention,68
+SRR23914571,AL,19,female,Dietary Intervention,69
+SRR23914579,aDR,19,female,Dietary Intervention,61
+SRR23914578,aDR,19,female,Dietary Intervention,62
+SRR23914576,aDR,19,female,Dietary Intervention,64
+SRR23914575,aDR,19,female,Dietary Intervention,65
+SRR23914573,aDR,19,female,Dietary Intervention,67
+SRR23914455,PBS,19,male,Young Plasma Injection,72
+SRR23914452,PBS,19,male,Young Plasma Injection,80
+SRR23914450,PBS,19,male,Young Plasma Injection,84
+SRR23914454,YMP,19,male,Young Plasma Injection,73
+SRR23914453,YMP,19,male,Young Plasma Injection,77
+SRR23914451,YMP,19,male,Young Plasma Injection,81
