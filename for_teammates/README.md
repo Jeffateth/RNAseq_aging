@@ -22,7 +22,7 @@ Load the tables with `read.csv(..., row.names = 1)` in R or `pd.read_csv(..., in
 | Dietary Intervention | `AL` (4), `aDR` (5); all female, 19 months | aDR vs AL |
 | Young Plasma Injection | `PBS` (3), `YMP` (3); all male, 19 months | YMP vs PBS |
 
-**Caution.** The cohorts differ for technical reasons (and AL is female, PBS male), so never pool them. SRR21355389 (aging 21mo) is blood-contaminated; we exclude it from the aging analysis.
+**Caution.** The cohorts differ for technical reasons (and AL is female, PBS male), so never pool them. SRR21355389 (aging 21mo) is potentially blood-contaminated: red-blood-cell and neutrophil genes are 50–150× the other aging samples (TPM: Hba-a1 4,499 vs median 57; Hbb-bs 4,242 vs 49; S100a8 3,959 vs 25). We exclude it from the aging analysis ([evidence](../docs/pipeline.md)).
 
 **Optional, larger file (not in git):** `rsem_results.tar.gz` (72 MB, RSEM's per-run files for `tximport`) from the GitHub release `data-v1`; check it with `shasum -a 256 -c ../metadata/data_checksums.txt`, unpack with `tar xzf rsem_results.tar.gz -C ../results/`.
 
