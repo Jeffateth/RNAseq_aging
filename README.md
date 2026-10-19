@@ -50,7 +50,7 @@ brew install sratoolkit                   # only for the adapter check in notebo
 Notebook 01 needs an ETH account and the VPN. Finished work is skipped, so interrupted runs resume.
 
 ## Data for your own analysis
-Start from [for_teammates/](for_teammates/README.md): RSEM expression tables, sample table and gene symbols (about 10 MB). RSEM's per-run files for `tximport` are `results/euler/rsem_results.tar.gz` (72 MB). The kallisto tarball (626 MB, over GitHub's file limit) is only on the laptop that ran the pipeline. Not available: the reads (54 GB) and the alignments (BAM files were not kept).
+Start from [for_teammates/](for_teammates/README.md): RSEM expression tables, a sample table (age, sex, group) and a gene-name table (about 10 MB). RSEM's per-run files (input for `tximport`, which sums them to gene level) are `results/euler/rsem_results.tar.gz` (72 MB). The kallisto tarball (626 MB, over GitHub's file limit) is only on the laptop that ran the pipeline. Not available: the reads (54 GB) and the alignments (BAM files were not kept).
 
 ## Files
 - **Docs:** [docs/data.md](docs/data.md) (study, design), [docs/pipeline.md](docs/pipeline.md) (each step and why, method choice), [docs/glossary.md](docs/glossary.md), [results/README.md](results/README.md) (how to read the result tables), [docs/Tutorial.md](docs/Tutorial.md) (the course tutorial this follows, Z. He, ETH Zurich).
