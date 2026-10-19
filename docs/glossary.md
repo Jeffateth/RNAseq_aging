@@ -54,7 +54,7 @@
 | **Covariate** | a known factor (here sex) in the model so it does not blur the comparison |
 | **vst, PCA** | variance-stabilising transformation for plotting / 2-D view of the main differences between samples |
 | **Spearman ρ, Jaccard, Fisher** | rank correlation / shared ÷ combined size of two gene lists / test that two lists overlap more than by chance |
-| **Outlier** | sample far from its group; SRR21355389 (potentially blood-contaminated, see pipeline.md step 8) is excluded from the aging analysis |
+| **Outlier** | sample far from its group; SRR21355389 (potentially blood-contaminated, [pipeline.md](pipeline.md) step 8) is excluded from the aging analysis |
 | **Gene set, GSEA (fgsea), NES** | genes sharing a function / test whether a set sits toward the top or bottom of genes ranked by the Wald statistic / its score (positive = up) |
 | **MSigDB, Hallmark, GO:BP** | gene-set database / its 50 curated sets / Gene Ontology biological-process terms |
 | **Reversal** | a treatment changes a gene or pathway opposite to how aging did |

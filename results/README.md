@@ -5,7 +5,8 @@ Small outputs are kept in git; large or regenerable files are git-ignored. Terms
 | Folder | Content | In git |
 |---|---|---|
 | `qc/` | fastp report per run (`<SRR>.fastp.json`; the `.html` is regenerated), `polyG_sensitivity_SRR21355398.csv` (genes whose kallisto counts changed > 5 % with poly-G trimming, one-run test); `adapter_content_before_after.png` / `.svg` (the slide figure, notebook 02); `qc/raw/`, `qc/trimmed/`, `multiqc_raw.html`: FastQC of the raw and of the trimmed reads | json, csv, figure |
-| `kallisto/`, `rsem/` | per-run kallisto and RSEM output from Euler (notebook 01) | no |
+| `kallisto/`, `rsem/` | per-run kallisto and RSEM output unpacked from the Euler tarballs (notebook 01) | no |
+| `euler/` | the result tarballs from Euler (RSEM, STAR, QC; the 626 MB kallisto one is not in git) | yes |
 | `star/` | `counts_unstranded.csv.gz` (STAR counts, genes × runs) and `star_qc.csv` (per run: `input_pairs_M`, `unique_%`, `multi_%`, `STAR_assigned_to_gene_%`, `frac_read1_same_strand` ≈ 0.5 = unstranded) | yes |
 | `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 (RSEM) | no |
 | `compare/` | kallisto vs STAR vs RSEM (notebook 04) | summary tables |

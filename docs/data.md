@@ -16,4 +16,4 @@ Each treatment is compared only with its own control: the controls differ in sex
 
 **Metadata (`metadata/`).** `samples.csv` has one row per run (SRR, GSM, BioSample, sex, age, mouse ID, group, depth) and is the file all code reads. It is built by `scripts/build_metadata.py` from `runinfo_raw.csv` and `biosample_raw.csv` (NCBI tables as fetched); `srr_list.txt` lists the 27 runs. `genes_M39.csv` maps each GENCODE M39 gene id to its symbol (built by `scripts/build_genes.py` from the transcript names).
 
-**Not used.** The other 14 regions, the paper's single-nucleus and spatial data, and the authors' GEO count tables. The paper's full 82-gene "common aging score" list (its Table S1) was not available, so we use the genes named in its figures.
+**Not used.** The other 14 regions, the paper's single-nucleus and spatial data, and its GEO count tables. Its full 82-gene "common aging score" list was not available, so we use the genes named in its figures.
