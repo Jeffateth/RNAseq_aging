@@ -19,7 +19,7 @@ results/compare/star_*.csv
 results/compare/rsem_*.csv
 results/rsem/
 # tarballs copied back from Euler
-results/euler/
+results/euler/kallisto_results.tar.gz
 
 # regenerated reports (kept locally, not in the repo)
 results/qc/*.fastp.html
