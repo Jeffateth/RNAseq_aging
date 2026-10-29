@@ -3,8 +3,9 @@
 # Contents (functions grouped by purpose)
 #   Load data ........ load_samples, load_genes, load_rsem, load_star_counts, load_txi (kallisto), subset_txi
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables
-#   Explore .......... pca_plot, outlier_genes
+#   Explore .......... pca_plot, sample_tree, outlier_genes, deg_patterns, deg_pattern_plot
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
+#                      counts_per_sample, method_agreement, single_method_calls, method_evidence (notebook 04)
 #                      tpm_variation, tpm_variation_table, tpm_variation_plot (technical vs biological variation)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
 #                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
@@ -52,7 +53,7 @@ subset_txi <- function(txi, srr) {
   txi
 }
 
-#' DESeq2 dataset for a subset of samples from a tximport list (kallisto) or a gene x sample count matrix (STAR);
+#' DESeq2 dataset for a subset of samples from a tximport list (kallisto, RSEM) or a gene x sample count matrix (STAR);
 #' genes need >= 10 counts in >= min_n samples.
 make_dds <- function(x, samples, design, min_n) {
   dds <- suppressMessages(if (is.matrix(x)) DESeqDataSetFromMatrix(round(x[, rownames(samples)]), samples, design)
@@ -79,6 +80,36 @@ pca_plot <- function(dds, color, shape = NULL) {
     (if (is.null(shape)) geom_point(size = 3.5) else geom_point(aes(shape = .data[[shape]]), size = 3.5)) +
     geom_text_repel(aes(label = sub("^SRR", "", name)), size = 3, show.legend = FALSE) +
     labs(x = paste0("PC1 (", pv[1], "%)"), y = paste0("PC2 (", pv[2], "%)"))
+}
+
+#' Hierarchical clustering of the samples (tutorial 3-3): distance 1 - Pearson r of the vst values (blind to groups), average linkage.
+#' Labels: group, sex (f/m), run number.
+sample_tree <- function(dds) {
+  v <- assay(suppressMessages(vst(dds, blind = TRUE)))
+  hc <- hclust(as.dist(1 - cor(v)), method = "average")
+  cd <- colData(dds)
+  plot(hc, labels = paste(cd$group, substr(cd$sex, 1, 1), sub("^SRR", "", colnames(v))), hang = -1, main = NULL, xlab = "", sub = "", ylab = "1 - Pearson r")
+  invisible(hc)
+}
+
+#' Aging DEGs (padj < alpha in 18 vs 3 or 21 vs 3 months) grouped by their course over age (tutorial 3-5). Profile per gene = log2FC vs
+#' 3 months at 3, 18, 21 months (0, then DESeq2's estimates, so adjusted for sex); distance 1 - Pearson r of the profiles (shape, not size),
+#' average linkage, cut into k clusters.
+deg_patterns <- function(age, k = 4, alpha = 0.05) {
+  ids <- union(filter(age$`18v3`, padj < alpha)$gene_id, filter(age$`21v3`, padj < alpha)$gene_id)
+  lfc <- \(t) unname(setNames(t$log2FoldChange, t$gene_id)[ids])
+  m <- cbind(0, lfc(age$`18v3`), lfc(age$`21v3`))
+  tibble(gene_id = ids, cluster = unname(cutree(hclust(as.dist(1 - cor(t(m))), method = "average"), k)), lfc_18v3 = m[, 2], lfc_21v3 = m[, 3]) %>%
+    left_join(select(age$`18v3`, gene_id, symbol), by = "gene_id")
+}
+
+#' One panel per cluster: each gene's log2FC vs 3 months over age (grey) and the cluster median (blue).
+deg_pattern_plot <- function(p) {
+  d <- p %>% mutate(m3 = 0) %>% pivot_longer(c(m3, lfc_18v3, lfc_21v3), values_to = "lfc") %>%
+    mutate(months = c(m3 = 3, lfc_18v3 = 18, lfc_21v3 = 21)[name], panel = paste0("cluster ", cluster, " (", table(p$cluster)[as.character(cluster)], " genes)"))
+  ggplot(d, aes(months, lfc)) + geom_hline(yintercept = 0, color = "grey60") + geom_line(aes(group = gene_id), color = "grey75", linewidth = 0.3) +
+    stat_summary(fun = median, geom = "line", color = "#2a78d6", linewidth = 1.2) + facet_wrap(~ panel, nrow = 1) +
+    scale_x_continuous(breaks = c(3, 18, 21)) + labs(x = "age (months)", y = "log2FC vs 3 months")
 }
 
 #' Genes that most distinguish one sample from the rest (vst difference) - to diagnose an outlier.
@@ -141,6 +172,66 @@ lfc_scatter <- function(a, b, title, names = c("kallisto", "STAR"), alpha = 0.05
     geom_point(data = filter(j, call == "neither"), size = 0.4, alpha = 0.3) + geom_point(data = filter(j, call != "neither"), size = 1) +
     geom_text_repel(data = filter(j, !is.na(lab)), aes(label = lab), size = 3, show.legend = FALSE, max.overlaps = 20) +
     scale_color_manual(values = cols) + labs(title = title, x = paste("log2FC", names[1]), y = paste("log2FC", names[2]))
+}
+
+#' Per sample: Spearman correlation of gene counts for each pair of methods, and total counts (millions) per method.
+#' m = named list of gene x sample count matrices on the same genes.
+counts_per_sample <- function(m, samples) {
+  s <- rownames(samples); pairs <- combn(names(m), 2, simplify = FALSE)
+  rho <- set_names(map(pairs, \(p) map_dbl(s, \(i) cor(m[[p[1]]][, i], m[[p[2]]][, i], method = "spearman"))),
+                   map_chr(pairs, \(p) paste("spearman", p[1], p[2], sep = "_")))
+  tibble(srr = s, group = samples$group, !!!rho, !!!set_names(map(m, \(x) colSums(x[, s]) / 1e6), paste0(names(m), "_M")))
+}
+
+#' compare_contrast for every pair of methods and every comparison; de = list(method = list(comparison = DE table)).
+method_agreement <- function(de, pairs) {
+  bind_rows(lapply(pairs, \(p) bind_rows(lapply(names(de[[p[1]]]), \(n) compare_contrast(de[[p[1]]][[n]], de[[p[2]]][[n]]) %>% mutate(contrast = n))) %>%
+    mutate(method_a = p[1], method_b = p[2]))) %>% relocate(method_a, method_b, contrast)
+}
+
+#' Genes significant in both / only the first / only the second method of each pair, with their median baseMean.
+single_method_calls <- function(de, pairs, alpha = 0.05) {
+  one <- \(a, b) inner_join(a, b, by = "gene_id", suffix = c("_a", "_b")) %>% filter(!is.na(padj_a), !is.na(padj_b)) %>%
+    mutate(call = case_when(padj_a < alpha & padj_b < alpha ~ "both", padj_a < alpha ~ "first only", padj_b < alpha ~ "second only", TRUE ~ "neither")) %>%
+    filter(call != "neither") %>% group_by(call) %>% summarise(n_genes = n(), median_baseMean = round(median((baseMean_a + baseMean_b) / 2)), .groups = "drop")
+  bind_rows(lapply(pairs, \(p) bind_rows(lapply(names(de[[p[1]]]), \(n) one(de[[p[1]]][[n]], de[[p[2]]][[n]]) %>% mutate(contrast = n))) %>%
+    mutate(first = p[1], second = p[2]))) %>% relocate(first, second, contrast)
+}
+
+#' One row per method with the criteria of docs/pipeline.md ("Choosing the counting method"). counts = list of tximport lists / count
+#' matrices; dds, de = run_dds / de_tables per method; ids = genes present in all methods.
+method_evidence <- function(counts, dds, de, samples, genes, ids) {
+  s <- rownames(samples)
+  # usable data: share of the trimmed read pairs counted in a gene; genes with >= 10 counts in >= 3 runs
+  inp <- read_csv(file.path(ROOT, "results/star/star_qc.csv"), show_col_types = FALSE) %>% column_to_rownames("SRR")
+  pairs_in <- inp[s, "input_pairs_M"] * 1e6
+  cnt <- lapply(counts, \(m) if (is.matrix(m)) m[, s] else m$counts[, s])
+  usable <- bind_rows(lapply(names(cnt), \(m) tibble(method = m, pct = 100 * colSums(cnt[[m]]) / pairs_in))) %>% group_by(method) %>%
+    summarise(counted_pairs_pct_median = round(median(pct), 1), min = round(min(pct), 1), max = round(max(pct), 1)) %>%
+    left_join(tibble(method = names(cnt), genes_detected = map_int(cnt, \(m) sum(rowSums(m >= 10) >= 3))), by = "method")
+  # replicate agreement: median over groups of the median pairwise Pearson r of log2 CPM (genes with mean >= 10 counts in every method)
+  keep <- ids[Reduce(`&`, lapply(cnt, \(m) rowMeans(m[ids, ]) >= 10))]
+  lcpm <- lapply(cnt, \(m) { m <- m[keep, ]; log2(sweep(m, 2, colSums(m) / 1e6, "/") + 1) })
+  repl <- bind_rows(lapply(names(lcpm), \(m) tibble(method = m, r = map_dbl(split(s, samples$group), \(g) { cm <- cor(lcpm[[m]][, g]); median(cm[lower.tri(cm)]) })))) %>%
+    group_by(method) %>% summarise(replicate_r_median = round(median(r), 4))
+  # noise: median DESeq2 dispersion per analysis over genes tested by all methods
+  tested <- Reduce(intersect, lapply(dds, \(d) Reduce(intersect, lapply(d, rownames))))
+  disp <- bind_rows(lapply(names(dds), \(m) tibble(method = m, !!!lapply(dds[[m]], \(d) round(median(setNames(dispersions(d), rownames(d))[intersect(rownames(d), tested)], na.rm = TRUE), 3)))))
+  # stability: aging DEGs (21 vs 3 months) without / with the outlier SRR21355389
+  s_all <- samples %>% filter(cohort == "aging") %>% mutate(group = droplevels(group))
+  stab <- bind_rows(lapply(names(counts), \(m) {
+    all12 <- de_table(make_dds(counts[[m]], s_all, ~ sex + group, min_n = 4), c("group", "aging 21mo", "aging 3mo"), genes)
+    cd <- compare_de(de[[m]]$aging_21v3, all12)
+    tibble(method = m, DEG_without = cd$DEG_a, DEG_with = cd$DEG_b, jaccard_outlier = round(cd$DEG_both / (cd$DEG_a + cd$DEG_b - cd$DEG_both), 2)) }))
+  # positive controls (the paper: 5 inflammation genes up with aging, 23 circadian/cycling genes up with aDR)
+  up_aging <- c("C4b", "Trem2", "Ctss", "Tyrobp", "Gfap")
+  adr23 <- c("Chordc1", "Cxcl12", "Fabp7", "Kdr", "Adipor2", "Gjb6", "Mertk", "Cry1", "Klf15", "Dbp", "Usp2", "Etnppl", "Ciart", "Sult1a1",
+             "Zbtb16", "Fkbp5", "Sgk1", "Tsc22d3", "Cirbp", "Rbm3", "Plin4", "Fmo2", "Hif3a")
+  ctrl <- bind_rows(lapply(names(de), \(m) tibble(method = m,
+    aging_genes_up_of_5 = sum(filter(de[[m]]$aging_21v3, symbol %in% up_aging)$log2FoldChange > 0),
+    aDR_genes_up_of_23 = sum(filter(de[[m]]$aDR, symbol %in% adr23)$log2FoldChange > 0))))
+  usable %>% left_join(repl, by = "method") %>% left_join(rename_with(disp, ~ paste0("dispersion_", .x), -method), by = "method") %>%
+    left_join(stab, by = "method") %>% left_join(ctrl, by = "method")
 }
 
 #' Technical vs biological variation on TPM (TA's design). a, b = gene x sample TPM of two methods (same genes and samples).

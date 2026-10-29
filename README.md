@@ -30,7 +30,7 @@ Run in numerical order. The heavy steps run on the Euler cluster (01).
 | 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | runs the heavy steps on Euler and copies the results back; describes the cluster scripts (`euler/`) |
 | 02 | [qc_trimming](notebooks/02_qc_trimming.ipynb) | Python | QC and trimming decisions with their evidence |
 | 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (`METHOD` switches the counting method) |
-| 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | agreement of the three methods; evidence for choosing one |
+| 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | does the counting method change the results? kallisto vs RSEM, technical vs biological variation |
 | 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways |
 
 ## Reproduce

@@ -15,7 +15,6 @@ results/qc/trimmed/
 results/qc/multiqc_*
 results/star/mapping/
 results/de/
-results/compare/star_*.csv
 results/compare/rsem_*.csv
 results/rsem/
 results/kallisto_nopolyg/
