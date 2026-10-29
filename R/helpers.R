@@ -5,6 +5,7 @@
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables
 #   Explore .......... pca_plot, outlier_genes
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
+#                      tpm_variation, tpm_variation_table, tpm_variation_plot (technical vs biological variation)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
 #                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
 # Terms: docs/glossary.md. Conventions: `res` = DESeq2 results table (columns gene_id, baseMean, log2FoldChange, lfcSE, stat,
@@ -27,13 +28,13 @@ load_samples <- function() {
 load_genes <- function() read_csv(file.path(ROOT, "metadata/genes_M39.csv"), show_col_types = FALSE)
 
 #' kallisto -> gene-level counts (tximport). Transcript ids are GENCODE headers "tx|gene|...|symbol|..."
-load_txi <- function(srr) {
-  files <- setNames(file.path(ROOT, "results/kallisto", srr, "abundance.tsv"), srr)
+load_txi <- function(srr, dir = file.path(ROOT, "results/kallisto")) {
+  files <- setNames(file.path(dir, srr, "abundance.tsv"), srr)
   ids <- read_tsv(files[[1]], col_select = target_id, show_col_types = FALSE)$target_id
   f <- str_split_fixed(ids, fixed("|"), 8)
   tx2gene <- tibble(TXNAME = ids, GENEID = f[, 2])
   genes <- distinct(tibble(gene_id = f[, 2], symbol = f[, 6]))
-  invisible(capture.output(txi <- suppressMessages(tximport(files, type = "kallisto", tx2gene = tx2gene))))
+  invisible(capture.output(txi <- suppressMessages(tximport(files, type = "kallisto", tx2gene = tx2gene, dropInfReps = TRUE))))
   list(txi = txi, genes = genes)
 }
 
@@ -140,6 +141,48 @@ lfc_scatter <- function(a, b, title, names = c("kallisto", "STAR"), alpha = 0.05
     geom_point(data = filter(j, call == "neither"), size = 0.4, alpha = 0.3) + geom_point(data = filter(j, call != "neither"), size = 1) +
     geom_text_repel(data = filter(j, !is.na(lab)), aes(label = lab), size = 3, show.legend = FALSE, max.overlaps = 20) +
     scale_color_manual(values = cols) + labs(title = title, x = paste("log2FC", names[1]), y = paste("log2FC", names[2]))
+}
+
+#' Technical vs biological variation on TPM (TA's design). a, b = gene x sample TPM of two methods (same genes and samples).
+#' Genes: mean TPM >= min_tpm in both methods. All values are log2((TPM + 1) / (TPM + 1)) per gene, centred on their median
+#' (`shift`): TPMs sum to a million, so a few abundant genes shift all others (removed by DESeq2's normalisation as well):
+#'   technical  = method a vs b on the same mouse; "offset removed" subtracts each gene's mean method difference over all mice
+#'                (a fixed per-gene offset cancels when both mice are counted with the same method);
+#'   biological = two mice of the same group and sex, one method; pair_lfc = the two methods' log2FC for the same pair of mice, subtracted.
+#' Returns per-comparison spreads (`per`) and the pooled log2FC values for plotting (`lfc`).
+tpm_variation <- function(a, b, samples, names = c("kallisto", "RSEM"), min_tpm = 1, exclude = "SRR21355389") {
+  keep <- rowMeans(a) >= min_tpm & rowMeans(b) >= min_tpm
+  la <- log2(a[keep, ] + 1); lb <- log2(b[keep, ] + 1)
+  d <- la - lb; d0 <- d - rowMeans(d)
+  level <- cut(log10((rowMeans(a[keep, ]) + rowMeans(b[keep, ])) / 2), c(-Inf, 1, 2, Inf), labels = c("TPM 1-10", "TPM 10-100", "TPM > 100"))
+  pairs <- samples %>% rownames_to_column("srr") %>% filter(!srr %in% exclude) %>% group_by(group, sex) %>% filter(n() >= 2) %>%
+    summarise(p = list(combn(srr, 2, simplify = FALSE)), .groups = "drop") %>% pull(p) %>% unlist(recursive = FALSE)
+  kinds <- c(setNames(list(lapply(colnames(d), \(s) d[, s]), lapply(colnames(d), \(s) d0[, s])),
+                      paste(c("technical:", "technical, offset removed:"), names[1], "vs", names[2], "(same mouse)")),
+             setNames(lapply(list(lb, la), \(l) lapply(pairs, \(p) l[, p[1]] - l[, p[2]])),
+                      paste0("biological: two mice, same group and sex (", names[2:1], ")")),
+             setNames(list(lapply(pairs, \(p) (la[, p[1]] - la[, p[2]]) - (lb[, p[1]] - lb[, p[2]]))),
+                      paste("pair log2FC,", names[1], "minus", names[2])))
+  kinds <- map(kinds, \(xs) map(xs, \(x) structure(x - median(x), shift = median(x))))
+  per <- imap_dfr(kinds, \(xs, k) map_dfr(xs, \(x) tibble(comparison = k, shift = attr(x, "shift"), sd = sd(x), median_abs = median(abs(x)),
+                                                         over_2fold = mean(abs(x) > 1), !!!map(split(abs(x), level), median))))
+  list(per = per, genes = sum(keep),
+       lfc = imap_dfr(kinds[c(1, 2, 3)], \(xs, k) tibble(comparison = k, log2FC = unlist(xs))))
+}
+
+#' Summary of tpm_variation: median over comparisons of each spread (log2 units; over_2fold in % of genes).
+tpm_variation_table <- function(v) v$per %>% group_by(comparison = fct_inorder(comparison)) %>%
+  summarise(n = n(), max_abs_shift = round(max(abs(shift)), 2), across(c(sd, median_abs, starts_with("TPM")), \(x) round(median(x), 3)), over_2fold_pct = round(100 * median(over_2fold), 1))
+
+#' Pooled distributions of log2FC: technical (with and without the per-gene offset) vs biological; ideally all centred on 0
+#' and the technical narrower.
+tpm_variation_plot <- function(v, xlim = c(-2, 2)) {
+  cols <- setNames(c("#2a78d6", "#2a78d6", "#eb6834"), unique(v$lfc$comparison)); lty <- setNames(c("dotted", "solid", "solid"), names(cols))
+  ggplot(v$lfc, aes(log2FC, color = comparison, linetype = comparison)) + geom_vline(xintercept = 0, color = "grey60") +
+    geom_density(linewidth = 1, adjust = 1.5) + coord_cartesian(xlim = xlim) +
+    scale_color_manual(values = cols) + scale_linetype_manual(values = lty) +
+    labs(x = "log2 fold change per gene", y = "density", color = NULL, linetype = NULL) +
+    theme(legend.position = "bottom", legend.direction = "vertical")
 }
 
 # ---- aging vs rejuvenation ------------------------------------------------------------------

@@ -7,16 +7,18 @@
 #                Measured peak memory over 13 runs: 6.0-14.8 GB (largest run 28 M pairs: 14.8 GB), so 24 GB leaves room.
 #                RSEM is a separate array because it needs little memory: inside the STAR task it would block 48 GB for over an hour.
 # RANGE selects the tasks of the STAR and RSEM arrays (default all 27), e.g. RANGE=7-27 bash euler/submit.sh to resume.
+# POLYG=off bash euler/submit.sh: the poly-G sensitivity run (no poly-G trimming; kallisto, STAR, RSEM only; outputs *_nopolyg). Same indices.
 set -euo pipefail
 export REPO="${REPO:-$HOME/RNAseq_aging}"
 RANGE="${RANGE:-1-27}"
+LIGHT="qc+qctrim+kallisto"; [[ "${POLYG:-on}" == off ]] && LIGHT="kallisto"
 source "$REPO/euler/common.sh"
 cd "$WORK/logs"                                  # job logs land here, not in the repo
 kidx=$(sbatch --parsable "$REPO/euler/02b_kallisto_index.sh")
 sidx=$(sbatch --parsable "$REPO/euler/02_star_index.sh")
 ridx=$(sbatch --parsable "$REPO/euler/02c_rsem_reference.sh")
 light=$(sbatch --parsable --dependency=afterok:"$kidx" --job-name=qc_kallisto --mem-per-cpu=4G --time=02:00:00 \
-        --export=ALL,STAGES="qc+qctrim+kallisto" "$REPO/euler/03_process_array.sh")
+        --export=ALL,STAGES="$LIGHT" "$REPO/euler/03_process_array.sh")
 star=$(sbatch --parsable --dependency=afterok:"$sidx" --array="$RANGE%6" --job-name=star \
        --export=ALL,STAGES="star" "$REPO/euler/03_process_array.sh")
 rsem=$(sbatch --parsable --dependency=aftercorr:"$star",afterok:"$ridx" --array="$RANGE%6" --job-name=rsem --mem-per-cpu=3G \

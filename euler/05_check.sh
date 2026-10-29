@@ -10,7 +10,10 @@ echo "== 1. jobs still queued or running"
 q=$(squeue -u "$USER" -h 2>/dev/null | wc -l); [[ $q -eq 0 ]] && echo "OK: none" || problem "$q jobs in the queue (squeue -u \$USER)"
 
 echo "== 2. every run has every result (missing runs listed)"
-for spec in "STAR:$MAP/%s/Log.final.out" "kallisto:$KAL/%s/abundance.h5" "RSEM:$RSEM/%s/%s.genes.results" "FastQC:$QC/raw/%s_2_fastqc.zip" "FastQC-trimmed:$QC/trimmed/%s_trim_2_fastqc.zip" "fastp:$QC/%s.fastp.json"; do
+specs=("STAR:$MAP/%s/Log.final.out" "kallisto:$KAL/%s/abundance.h5" "RSEM:$RSEM/%s/%s.genes.results")
+[[ "$POLYG" == off ]] || specs+=("FastQC:$QC/raw/%s_2_fastqc.zip" "FastQC-trimmed:$QC/trimmed/%s_trim_2_fastqc.zip" "fastp:$QC/%s.fastp.json")
+echo "(POLYG=$POLYG: $MAP, $KAL, $RSEM)"
+for spec in "${specs[@]}"; do
   name=${spec%%:*}; pat=${spec#*:}; miss=""; n=0
   for s in $(cat "$REPO/metadata/srr_list.txt"); do
     f=${pat//%s/$s}; [[ -s "$f" ]] && n=$((n+1)) || miss="$miss $s"
@@ -38,4 +41,4 @@ echo "== 4. jobs that ended badly in the last 5 days"
 sacct -S "$(date -d '5 days ago' +%F 2>/dev/null || date -v-5d +%F)" --format=JobID%20,JobName,State,Elapsed -X 2>/dev/null | grep -E "FAILED|TIMEOUT|OUT_OF_ME" || echo "none listed (cancelled jobs that were replaced by reruns are not shown here)"
 
 echo
-[[ $bad -eq 0 ]] && echo "ALL OK: run bash euler/04_collect.sh next" || echo "$bad problem line(s) above: fix or rerun those runs before collecting"
+[[ $bad -eq 0 ]] && echo "ALL OK: run bash euler/04_collect.sh next (with the same POLYG setting)" || echo "$bad problem line(s) above: fix or rerun those runs before collecting"

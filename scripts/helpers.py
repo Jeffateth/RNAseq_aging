@@ -326,10 +326,12 @@ EULER = ROOT / "results/euler"      # put the tarballs from euler/04_collect.sh 
 
 def unpack_euler(src: Path = EULER):
     """Unpack the tarballs from euler/04_collect.sh: kallisto_results, rsem_results, qc_results and qc_trimmed_results into results/ (-> results/kallisto,
-    results/rsem, results/qc, results/qc/trimmed), star_results into results/star/ (-> results/star/mapping). Missing tarballs are reported and skipped."""
+    results/rsem, results/qc, results/qc/trimmed), star_results into results/star/ (-> results/star/mapping); the poly-G sensitivity run's
+    kallisto_nopolyg_results and rsem_nopolyg_results -> results/kallisto_nopolyg, results/rsem_nopolyg. Missing tarballs are reported and skipped."""
     import tarfile
     targets = {"kallisto_results.tar.gz": ROOT / "results", "rsem_results.tar.gz": ROOT / "results", "qc_results.tar.gz": ROOT / "results",
-               "qc_trimmed_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star"}
+               "qc_trimmed_results.tar.gz": ROOT / "results", "star_results.tar.gz": ROOT / "results/star",
+               "kallisto_nopolyg_results.tar.gz": ROOT / "results", "rsem_nopolyg_results.tar.gz": ROOT / "results"}
     for name, dest in targets.items():
         f = src / name
         if not f.is_file():

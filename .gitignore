@@ -18,8 +18,11 @@ results/de/
 results/compare/star_*.csv
 results/compare/rsem_*.csv
 results/rsem/
+results/kallisto_nopolyg/
+results/rsem_nopolyg/
 # tarballs copied back from Euler
 results/euler/kallisto_results.tar.gz
+results/euler/*_nopolyg_results.tar.gz
 
 # regenerated reports (kept locally, not in the repo)
 results/qc/*.fastp.html

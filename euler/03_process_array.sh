@@ -15,11 +15,18 @@
 # a light one ("qc+qctrim+kallisto", 4 GB per core), a STAR one ("star", ~30 GB for the genome index) and an RSEM one ("rsem", 3 GB per core;
 # RSEM takes 40-90 min per run, so it is kept out of the STAR tasks that reserve 48 GB).
 # fastp: adapters detected from the read pair, poly-G tails trimmed, reads < 20 bases dropped, default quality filter; duplicates are NOT removed (no --dedup).
+# POLYG=off (common.sh): poly-G trimming explicitly disabled (fastp may switch it on by itself for NovaSeq reads), outputs to the _nopolyg folders;
+# only the counting stages are allowed then, so the QC reports always describe the main run.
 set -euo pipefail
 source "${REPO:-$HOME/RNAseq_aging}/euler/common.sh"
 STAGES="${STAGES:-qc+qctrim+kallisto+star+rsem}"
 srr=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$REPO/metadata/srr_list.txt")
 has() { [[ "+$STAGES+" == *"+$1+"* ]]; }
+polyg=--trim_poly_g
+if [[ "$POLYG" == off ]]; then
+  polyg=--disable_trim_poly_g
+  if has qc || has qctrim; then echo "POLYG=off: run only kallisto, star, rsem (STAGES=$STAGES)"; exit 1; fi
+fi
 
 todo_qc=0; todo_qctrim=0; todo_kal=0; todo_star=0; todo_rsem=0
 if has qc       && [[ ! -s "$QC/raw/${srr}_2_fastqc.zip" || ! -s "$QC/$srr.fastp.json" ]]; then todo_qc=1; fi
@@ -41,7 +48,7 @@ if (( todo_qc + todo_qctrim + todo_kal + todo_star )); then   # RSEM alone needs
     json=/dev/null; html=/dev/null                                        # keep the fastp report from the qc stage only
     if (( todo_qc )); then json="$QC/$srr.fastp.json"; html="$QC/$srr.fastp.html"; fi
     fastp -i "$fq/${srr}_1.fastq" -I "$fq/${srr}_2.fastq" -o "$fq/${srr}_trim_1.fastq.gz" -O "$fq/${srr}_trim_2.fastq.gz" \
-          --detect_adapter_for_pe --trim_poly_g --length_required 20 --thread 8 --json "$json" --html "$html"
+          --detect_adapter_for_pe "$polyg" --length_required 20 --thread 8 --json "$json" --html "$html"
   fi
   rm -f "$fq/${srr}_1.fastq" "$fq/${srr}_2.fastq"
 
