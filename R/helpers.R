@@ -1,14 +1,14 @@
 # R helpers for notebooks 03, 04, 05 (run them from notebooks/; paths are relative to the repo root).
 #
 # Contents (functions grouped by purpose)
-#   Load data ........ load_samples, load_genes, load_rsem, load_star_counts, load_txi (kallisto), subset_txi
+#   Load data ........ load_samples, load_genes, load_rsem, load_txi (kallisto), subset_txi
 #   DESeq2 ........... make_dds, de_table, n_deg, run_dds, de_tables
-#   Explore .......... pca_plot, sample_tree, outlier_genes, deg_patterns, deg_pattern_plot
+#   Explore .......... pca_plot, sample_tree, outlier_genes, deg_patterns, deg_pattern_plot, annotate_degs
 #   Compare methods .. compare_de, compare_contrast, lfc_scatter          (any two methods; outlier sensitivity)
 #                      counts_per_sample, method_agreement, single_method_calls, method_evidence (notebook 04)
 #                      tpm_variation, tpm_variation_table, tpm_variation_plot (technical vs biological variation)
 #   Aging vs treatment overlap_with_aging, signature_score, score_test, score_plot, lfc_vs_aging_plot,
-#                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table
+#                      msigdb_sets, run_gsea, nes_tiles, gsea_concordance, gene_table, shared_with_aging
 # Terms: docs/glossary.md. Conventions: `res` = DESeq2 results table (columns gene_id, baseMean, log2FoldChange, lfcSE, stat,
 # pvalue, padj, symbol); `x` = tximport list (kallisto, RSEM) or gene x sample count matrix (STAR); `dds` = DESeq2 dataset.
 suppressPackageStartupMessages({library(tidyverse); library(tximport); library(DESeq2); library(ggrepel)})
@@ -83,12 +83,30 @@ pca_plot <- function(dds, color, shape = NULL) {
 }
 
 #' Hierarchical clustering of the samples (tutorial 3-3): distance 1 - Pearson r of the vst values (blind to groups), average linkage.
-#' Labels: group, sex (f/m), run number.
+#' Labels: group, sex (f/m), run number; colour = experiment (aging / aDR / YMP), bold = treated mice.
 sample_tree <- function(dds) {
   v <- assay(suppressMessages(vst(dds, blind = TRUE)))
   hc <- hclust(as.dist(1 - cor(v)), method = "average")
-  cd <- colData(dds)
-  plot(hc, labels = paste(cd$group, substr(cd$sex, 1, 1), sub("^SRR", "", colnames(v))), hang = -1, main = NULL, xlab = "", sub = "", ylab = "1 - Pearson r")
+  cd <- as.data.frame(colData(dds))
+  exp_col <- c(aging = "#2a78d6", aDR = "#eb6834", YMP = "#1baf7a")          # validated categorical slots 1-3
+  experiment <- case_when(cd$cohort == "aging" ~ "aging", cd$group %in% c("AL", "aDR") ~ "aDR", TRUE ~ "YMP")
+  col <- setNames(exp_col[experiment], rownames(cd)); bold <- setNames(cd$group %in% c("aDR", "YMP"), rownames(cd))
+  lab <- setNames(paste(cd$group, substr(cd$sex, 1, 1), sub("^SRR", "", rownames(cd))), rownames(cd))
+  dend <- dendrapply(as.dendrogram(hc), \(n) {
+    if (is.leaf(n)) { id <- attr(n, "label"); attr(n, "label") <- lab[[id]]
+      attr(n, "nodePar") <- list(pch = NA, lab.col = col[[id]], lab.font = if (bold[[id]]) 2 else 1)
+      attr(n, "edgePar") <- list(col = col[[id]], lwd = 2) }
+    n })
+  op <- par(no.readonly = TRUE); on.exit(par(op))
+  layout(matrix(1:2, nrow = 1), widths = c(4, 1.3))
+  par(mar = c(10, 4, 1, 0))
+  plot(dend, ylab = "1 - Pearson r")
+  par(mar = c(0, 0, 1, 0)); plot.new()
+  legend("topleft", title = "Experiment (colour)", bg = "white", cex = 0.95, text.col = exp_col, text.font = 2,
+         legend = c("aging: 3 / 18 / 21 months", "aDR: AL (control), aDR", "YMP: PBS (control), YMP"))
+  legend("left", title = "Labels", bg = "white", cex = 0.95,
+         legend = c("AL: ad libitum feeding", "aDR: acute dietary restriction", "PBS: saline injections", "YMP: young mouse plasma",
+                    "bold: treated mice", "f / m: female / male", "number: SRR run"))
   invisible(hc)
 }
 
@@ -142,12 +160,6 @@ de_tables <- function(d, genes) list(
   aging_21v3 = de_table(d$aging, c("group", "aging 21mo", "aging 3mo"), genes),
   aDR = de_table(d$aDR, c("group", "aDR", "AL"), genes),
   YMP = de_table(d$YMP, c("group", "YMP", "PBS"), genes))
-
-#' STAR GeneCounts matrix saved by notebook 01 (genes x runs, GENCODE M39 versioned gene ids = kallisto's).
-load_star_counts <- function(path = file.path(ROOT, "results/star/counts_unstranded.csv.gz")) {
-  m <- read_csv(path, show_col_types = FALSE) %>% column_to_rownames(colnames(.)[1]) %>% as.matrix()
-  storage.mode(m) <- "integer"; m
-}
 
 #' Agreement of two result tables for one contrast (a, b = DE tables of two quantification methods).
 compare_contrast <- function(a, b, alpha = 0.05) {
@@ -277,6 +289,32 @@ tpm_variation_plot <- function(v, xlim = c(-2, 2)) {
 }
 
 # ---- aging vs rejuvenation ------------------------------------------------------------------
+
+#' All DEGs (padj < alpha) of a named list of DE tables, one row per gene and comparison, with the gene's full name and type from
+#' org.Mm.eg.db (NCBI Gene; NA = no entry, mostly predicted genes and lncRNAs).
+annotate_degs <- function(tables, alpha = 0.05) {
+  d <- bind_rows(lapply(names(tables), \(n) filter(tables[[n]], padj < alpha) %>% mutate(comparison = n)))
+  db <- org.Mm.eg.db::org.Mm.eg.db
+  q <- \(keys, type) suppressMessages(AnnotationDbi::select(db, keys, c("SYMBOL", "GENENAME", "GENETYPE"), type))
+  # by Ensembl id, kept only where NCBI's symbol matches ours (ids can map to another gene between releases); else by symbol
+  by_id <- q(unique(sub("\\..*", "", d$gene_id)), "ENSEMBL") %>% filter(!is.na(SYMBOL))
+  by_sym <- q(unique(d$symbol), "SYMBOL") %>% filter(!is.na(GENENAME))
+  ann <- distinct(d, gene_id, symbol) %>% mutate(ENSEMBL = sub("\\..*", "", gene_id)) %>%
+    left_join(semi_join(by_id, ., by = c("ENSEMBL", "SYMBOL" = "symbol")) %>% distinct(ENSEMBL, .keep_all = TRUE) %>% select(ENSEMBL, n1 = GENENAME, t1 = GENETYPE), by = "ENSEMBL") %>%
+    left_join(distinct(by_sym, SYMBOL, .keep_all = TRUE) %>% select(symbol = SYMBOL, n2 = GENENAME, t2 = GENETYPE), by = "symbol") %>%
+    transmute(gene_id, name = coalesce(n1, n2), type = coalesce(t1, t2))
+  d %>% left_join(ann, by = "gene_id") %>%
+    transmute(comparison, symbol, name, type, log2FC = round(log2FoldChange, 2), padj = signif(padj, 2), direction = if_else(log2FoldChange > 0, "up", "down"), gene_id) %>%
+    arrange(comparison, padj)
+}
+
+#' Treatment DEGs that are also aging DEGs (21 vs 3 months): log2FC in both; reversal = opposite sign to aging.
+shared_with_aging <- function(res, treatments = c("aDR", "YMP"), alpha = 0.05) {
+  aging <- filter(res$aging_21v3, padj < alpha) %>% select(gene_id, symbol, lfc_aging = log2FoldChange)
+  bind_rows(lapply(treatments, \(n) inner_join(aging, filter(res[[n]], padj < alpha) %>% select(gene_id, lfc_treatment = log2FoldChange), by = "gene_id") %>%
+    mutate(treatment = n))) %>% mutate(across(starts_with("lfc"), \(x) round(x, 2)), vs_aging = if_else(sign(lfc_aging) == sign(lfc_treatment), "same", "reversal")) %>%
+    select(treatment, symbol, lfc_aging, lfc_treatment, vs_aging)
+}
 #' Overlap of an intervention's DEGs with the aging DEGs (genes tested in both): counts by direction, enrichment, log2FC agreement.
 #' "reversal" = opposite sign to aging (rejuvenating); "same" = same sign (aging-like).
 overlap_with_aging <- function(aging, interv, alpha = 0.05) {

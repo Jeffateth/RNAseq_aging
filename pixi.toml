@@ -27,4 +27,5 @@ bioconductor-tximport = "*"          # transcript estimates -> gene counts
 bioconductor-genomeinfodbdata = "*"  # data package DESeq2 needs
 bioconductor-fgsea = "*"             # gene set enrichment analysis
 r-msigdbr = "*"                      # MSigDB gene sets (Hallmark, GO)
+"bioconductor-org.mm.eg.db" = ">=3.20.0,<4"  # mouse gene names, types and GO terms (DEG annotation)
 matplotlib = ">=3.10.9,<4"

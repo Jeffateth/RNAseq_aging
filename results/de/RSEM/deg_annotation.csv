@@ -1,0 +1,400 @@
+comparison,symbol,name,type,log2FC,padj,direction,aging_cluster,gene_id
+YMP,Ptgds,prostaglandin D2 synthase (brain),protein-coding,-1.46,2.9999999999999996e-24,down,NA,ENSMUSG00000015090.15
+YMP,Zftraf1,zinc finger TRAF type containing 1,protein-coding,1.5,3.1e-6,up,NA,ENSMUSG00000053929.20
+YMP,Nefl,"neurofilament, light polypeptide",protein-coding,0.74,1.3e-5,up,NA,ENSMUSG00000022055.9
+YMP,Ogn,osteoglycin,protein-coding,-2.13,1.8e-5,down,NA,ENSMUSG00000021390.8
+YMP,Ccn3,cellular communication network factor 3,protein-coding,-4.23,5.8e-5,down,NA,ENSMUSG00000037362.10
+YMP,Nefm,"neurofilament, medium polypeptide",protein-coding,0.72,6.5e-5,up,NA,ENSMUSG00000022054.13
+YMP,A730009L09Rik,RIKEN cDNA A730009L09 gene,unknown,-2.7,1e-4,down,NA,ENSMUSG00000110358.2
+YMP,Gm12895,NA,NA,7.05,2.3e-4,up,NA,ENSMUSG00000083365.2
+YMP,Ttn,titin,protein-coding,2.33,3.6e-4,up,NA,ENSMUSG00000051747.18
+YMP,Slc47a1,"solute carrier family 47, member 1",protein-coding,-6.63,4.6e-4,down,NA,ENSMUSG00000010122.16
+YMP,Rnf157,ring finger protein 157,protein-coding,0.57,5.2e-4,up,NA,ENSMUSG00000052949.16
+YMP,Gm14295,predicted gene 14295,protein-coding,-1.27,5.2e-4,down,NA,ENSMUSG00000078877.13
+YMP,Pcsk6,proprotein convertase subtilisin/kexin type 6,protein-coding,0.91,6.1e-4,up,NA,ENSMUSG00000030513.16
+YMP,Fmod,fibromodulin,protein-coding,-1.06,6.1e-4,down,NA,ENSMUSG00000041559.9
+YMP,Ccl21b,C-C motif chemokine ligand 21B (leucine),protein-coding,-6.87,6.1e-4,down,NA,ENSMUSG00000095675.3
+YMP,Ccl21e,C-C motif chemokine ligand 21E,protein-coding,-6.87,6.1e-4,down,NA,ENSMUSG00000096596.3
+YMP,Foxk2,forkhead box K2,protein-coding,1.19,0.0011,up,NA,ENSMUSG00000039275.11
+YMP,Gm12940,NA,NA,-0.77,0.0011,down,NA,ENSMUSG00000085334.8
+YMP,Slc17a6,"solute carrier family 17 (sodium-dependent inorganic phosphate cotransporter), member 6",protein-coding,1.41,0.0011,up,NA,ENSMUSG00000030500.8
+YMP,Parp4,"poly (ADP-ribose) polymerase family, member 4",protein-coding,-0.85,0.0017,down,NA,ENSMUSG00000054509.9
+YMP,Spry2,sprouty RTK signaling antagonist 2,protein-coding,-0.66,0.0023,down,NA,ENSMUSG00000022114.7
+YMP,Iqgap2,IQ motif containing GTPase activating protein 2,protein-coding,1.91,0.0026,up,NA,ENSMUSG00000021676.12
+YMP,Kctd12,potassium channel tetramerisation domain containing 12,protein-coding,-0.84,0.0026,down,NA,ENSMUSG00000098557.2
+YMP,Ybx3,Y box protein 3,protein-coding,1.36,0.0048,up,NA,ENSMUSG00000030189.17
+YMP,Slc6a13,"solute carrier family 6 (neurotransmitter transporter, GABA), member 13",protein-coding,-1.19,0.0078,down,NA,ENSMUSG00000030108.16
+YMP,Gm74603,NA,NA,-6.12,0.0097,down,NA,ENSMUSG00000123598.1
+YMP,Mgp,matrix Gla protein,protein-coding,-1.03,0.013,down,NA,ENSMUSG00000030218.4
+YMP,Serpina9,"serine (or cysteine) peptidase inhibitor, clade A (alpha-1 antiproteinase, antitrypsin), member 9",protein-coding,3.05,0.015,up,NA,ENSMUSG00000058260.4
+YMP,Cpeb2,cytoplasmic polyadenylation element binding protein 2,protein-coding,-1,0.016,down,NA,ENSMUSG00000039782.17
+YMP,Gm75556,NA,NA,-0.75,0.017,down,NA,ENSMUSG00000140457.1
+YMP,Pacsin2,protein kinase C and casein kinase substrate in neurons 2,protein-coding,0.48,0.017,up,NA,ENSMUSG00000016664.19
+YMP,Kif2a,kinesin family member 2A,protein-coding,-0.7,0.017,down,NA,ENSMUSG00000021693.22
+YMP,Slc13a4,"solute carrier family 13 (sodium/sulfate symporters), member 4",protein-coding,-1.26,0.017,down,NA,ENSMUSG00000029843.6
+YMP,Zdhhc18,"zinc finger, DHHC domain containing 18",protein-coding,0.62,0.025,up,NA,ENSMUSG00000037553.16
+YMP,Kat6b,K(lysine) acetyltransferase 6B,protein-coding,-0.5,0.026,down,NA,ENSMUSG00000021767.22
+YMP,Slc39a1,"solute carrier family 39 (zinc transporter), member 1",protein-coding,-0.78,0.026,down,NA,ENSMUSG00000052310.11
+YMP,Mex3c,mex3 RNA binding family member C,protein-coding,0.69,0.026,up,NA,ENSMUSG00000037253.10
+YMP,Atp8b2,"ATPase, class I, type 8B, member 2",protein-coding,-1.12,0.029,down,NA,ENSMUSG00000060671.14
+YMP,Klk6,kallikrein related-peptidase 6,protein-coding,0.78,0.03,up,NA,ENSMUSG00000050063.20
+YMP,Galnt15,polypeptide N-acetylgalactosaminyltransferase 15,protein-coding,-0.62,0.031,down,NA,ENSMUSG00000021903.13
+YMP,Arhgef19,Rho guanine nucleotide exchange factor 19,protein-coding,0.69,0.034,up,NA,ENSMUSG00000028919.13
+YMP,Nefh,"neurofilament, heavy polypeptide",protein-coding,0.51,0.037,up,NA,ENSMUSG00000020396.10
+YMP,Ttc7b,tetratricopeptide repeat domain 7B,protein-coding,0.53,0.041,up,NA,ENSMUSG00000033530.10
+YMP,Zdhhc20,"zinc finger, DHHC domain containing 20",protein-coding,0.57,0.044,up,NA,ENSMUSG00000021969.10
+YMP,Frs2,fibroblast growth factor receptor substrate 2,protein-coding,-0.63,0.045,down,NA,ENSMUSG00000020170.6
+YMP,Cacna2d1,"calcium channel, voltage-dependent, alpha2/delta subunit 1",protein-coding,-0.7,0.045,down,NA,ENSMUSG00000040118.18
+YMP,Hsph1,heat shock 105kDa/110kDa protein 1,protein-coding,0.52,0.046,up,NA,ENSMUSG00000029657.17
+YMP,Lrp3,low density lipoprotein receptor-related protein 3,protein-coding,0.67,0.049,up,NA,ENSMUSG00000001802.18
+YMP,Stk4,serine/threonine kinase 4,protein-coding,-0.98,0.05,down,NA,ENSMUSG00000018209.17
+YMP,Slc6a20a,"solute carrier family 6 (neurotransmitter transporter), member 20A",protein-coding,-0.75,0.05,down,NA,ENSMUSG00000036814.15
+aDR,Tsc22d3,"TSC22 domain family, member 3",protein-coding,0.51,3.8e-10,up,NA,ENSMUSG00000031431.15
+aDR,Cdr1,cerebellar degeneration related antigen 1,unknown,10.82,4.2e-10,up,NA,ENSMUSG00000090546.3
+aDR,Fgfr2,fibroblast growth factor receptor 2,protein-coding,-0.74,3.2e-7,down,NA,ENSMUSG00000030849.20
+aDR,Hlf,hepatic leukemia factor,protein-coding,0.46,3.6e-7,up,NA,ENSMUSG00000003949.18
+aDR,Ciart,circadian associated repressor of transcription,protein-coding,0.78,6.8e-7,up,NA,ENSMUSG00000038550.12
+aDR,Ptp4a1,protein tyrosine phosphatase 4a1,protein-coding,-0.6,9.1e-6,down,NA,ENSMUSG00000144322.2
+aDR,Rfxap,regulatory factor X-associated protein,protein-coding,0.42,1.5e-5,up,NA,ENSMUSG00000036615.9
+aDR,Nr4a2,"nuclear receptor subfamily 4, group A, member 2",protein-coding,0.93,6.3e-5,up,NA,ENSMUSG00000026826.15
+aDR,Nr4a3,"nuclear receptor subfamily 4, group A, member 3",protein-coding,1.15,6.3e-5,up,NA,ENSMUSG00000028341.10
+aDR,Ado,2-aminoethanethiol dioxygenase,protein-coding,-0.26,6.3e-5,down,NA,ENSMUSG00000057134.8
+aDR,Per1,period circadian clock 1,protein-coding,0.84,6.7e-5,up,NA,ENSMUSG00000020893.19
+aDR,Rock2,Rho-associated coiled-coil containing protein kinase 2,protein-coding,0.36,1.4e-4,up,NA,ENSMUSG00000020580.12
+aDR,Kdr,kinase insert domain protein receptor,protein-coding,-1.03,1.4e-4,down,NA,ENSMUSG00000062960.12
+aDR,Tmem278,NA,NA,-0.87,2.1e-4,down,NA,ENSMUSG00000073680.4
+aDR,Plxnb3,plexin B3,protein-coding,-0.77,2.3e-4,down,NA,ENSMUSG00000031385.16
+aDR,Zbtb16,zinc finger and BTB domain containing 16,protein-coding,1.07,3.5e-4,up,NA,ENSMUSG00000066687.7
+aDR,Ccdc28b,coiled coil domain containing 28B,protein-coding,0.52,3.7e-4,up,NA,ENSMUSG00000028795.17
+aDR,Dennd4c,DENN domain containing 4C,protein-coding,1.13,3.9e-4,up,NA,ENSMUSG00000038024.19
+aDR,Kctd9,potassium channel tetramerisation domain containing 9,protein-coding,-0.7,5.3e-4,down,NA,ENSMUSG00000034327.19
+aDR,Kcnk13,"potassium channel, subfamily K, member 13",protein-coding,-0.98,5.3e-4,down,NA,ENSMUSG00000045404.18
+aDR,Dbp,D site albumin promoter binding protein,protein-coding,0.4,5.3e-4,up,NA,ENSMUSG00000059824.14
+aDR,Ifrd1,interferon-related developmental regulator 1,protein-coding,0.56,6.3e-4,up,NA,ENSMUSG00000001627.14
+aDR,Ugt8a,UDP galactosyltransferase 8A,protein-coding,-0.95,6.3e-4,down,NA,ENSMUSG00000032854.14
+aDR,Etnppl,ethanolamine phosphate phospholyase,protein-coding,0.66,7.1e-4,up,NA,ENSMUSG00000019232.16
+aDR,Edil3,EGF-like repeats and discoidin I-like domains 3,protein-coding,-0.67,7.1e-4,down,NA,ENSMUSG00000034488.16
+aDR,Scd2,stearoyl-Coenzyme A desaturase 2,protein-coding,-0.46,7.4e-4,down,NA,ENSMUSG00000025203.8
+aDR,Gdf10,growth differentiation factor 10,protein-coding,0.44,7.4e-4,up,NA,ENSMUSG00000021943.9
+aDR,Clic4,chloride intracellular channel 4,protein-coding,-0.45,8.1e-4,down,NA,ENSMUSG00000037242.10
+aDR,Qki,"quaking, KH domain containing RNA binding",protein-coding,-0.47,8.1e-4,down,NA,ENSMUSG00000062078.17
+aDR,Tppp,tubulin polymerization promoting protein,protein-coding,-0.47,0.0014,down,NA,ENSMUSG00000021573.17
+aDR,Rbm3,"RNA binding motif (RNP1, RRM) protein 3",protein-coding,0.57,0.0014,up,NA,ENSMUSG00000031167.18
+aDR,Cirbp,cold inducible RNA binding protein,protein-coding,0.56,0.0018,up,NA,ENSMUSG00000045193.15
+aDR,Spata13,spermatogenesis associated 13,protein-coding,-1.26,0.0019,down,NA,ENSMUSG00000021990.17
+aDR,Cry2,cryptochrome circadian regulator 2,protein-coding,0.39,0.0019,up,NA,ENSMUSG00000068742.13
+aDR,Neat1,nuclear paraspeckle assembly transcript 1 (non-protein coding),ncRNA,-0.81,0.0019,down,NA,ENSMUSG00000092274.6
+aDR,Galnt6,polypeptide N-acetylgalactosaminyltransferase 6,protein-coding,-0.9,0.0024,down,NA,ENSMUSG00000037280.14
+aDR,Sult1a1,"sulfotransferase family 1A, phenol-preferring, member 1",protein-coding,1.35,0.0026,up,NA,ENSMUSG00000030711.18
+aDR,Serinc5,serine incorporator 5,protein-coding,-0.5,0.0027,down,NA,ENSMUSG00000021703.11
+aDR,Adamtsl4,ADAMTS-like 4,protein-coding,-1.31,0.0028,down,NA,ENSMUSG00000015850.13
+aDR,Elovl7,ELOVL fatty acid elongase 7,protein-coding,-0.96,0.0029,down,NA,ENSMUSG00000021696.11
+aDR,Cdkn1a,cyclin dependent kinase inhibitor 1A,protein-coding,0.63,0.0032,up,NA,ENSMUSG00000023067.16
+aDR,Itgb4,integrin beta 4,protein-coding,-0.84,0.0035,down,NA,ENSMUSG00000020758.17
+aDR,Pkp4,plakophilin 4,protein-coding,-0.28,0.004,down,NA,ENSMUSG00000026991.22
+aDR,Cyp39a1,"cytochrome P450, family 39, subfamily a, polypeptide 1",protein-coding,-0.95,0.006,down,NA,ENSMUSG00000023963.12
+aDR,Coq10b,coenzyme Q10B,protein-coding,0.44,0.0067,up,NA,ENSMUSG00000025981.15
+aDR,Thyn1,thymocyte nuclear protein 1,protein-coding,0.34,0.0067,up,NA,ENSMUSG00000035443.12
+aDR,Lifr,LIF receptor alpha,protein-coding,-0.29,0.0072,down,NA,ENSMUSG00000054263.14
+aDR,Prodh,proline dehydrogenase,protein-coding,0.45,0.0072,up,NA,ENSMUSG00000003526.14
+aDR,Rassf2,Ras association (RalGDS/AF-6) domain family member 2,protein-coding,-0.36,0.0072,down,NA,ENSMUSG00000027339.17
+aDR,Gpr37,G protein-coupled receptor 37,protein-coding,-0.76,0.0072,down,NA,ENSMUSG00000039904.11
+aDR,Gm16499,predicted gene 16499,ncRNA,-4.75,0.0072,down,NA,ENSMUSG00000108255.3
+aDR,Tmeff1,transmembrane protein with EGF-like and two follistatin-like domains 1,protein-coding,-0.63,0.0075,down,NA,ENSMUSG00000028347.16
+aDR,Gjc2,"gap junction protein, gamma 2",protein-coding,-0.99,0.0075,down,NA,ENSMUSG00000043448.15
+aDR,Rasd2,"RASD family, member 2",protein-coding,0.48,0.008,up,NA,ENSMUSG00000034472.15
+aDR,Vstm4,V-set and transmembrane domain containing 4,protein-coding,-0.62,0.0086,down,NA,ENSMUSG00000050666.16
+aDR,Olfml1,olfactomedin-like 1,protein-coding,-0.75,0.01,down,NA,ENSMUSG00000051041.10
+aDR,Aatk,apoptosis-associated tyrosine kinase,protein-coding,-0.37,0.01,down,NA,ENSMUSG00000025375.17
+aDR,Anln,"anillin, actin binding protein",protein-coding,-0.82,0.01,down,NA,ENSMUSG00000036777.10
+aDR,Slain1,"SLAIN motif family, member 1",protein-coding,-0.42,0.013,down,NA,ENSMUSG00000055717.15
+aDR,Arc,activity regulated cytoskeletal-associated protein,protein-coding,-0.43,0.013,down,NA,ENSMUSG00000022602.16
+aDR,Flot1,flotillin 1,protein-coding,0.37,0.014,up,NA,ENSMUSG00000059714.15
+aDR,Ssbp2,single-stranded DNA binding protein 2,protein-coding,0.25,0.014,up,NA,ENSMUSG00000003992.17
+aDR,Mmp14,matrix metallopeptidase 14 (membrane-inserted),protein-coding,-0.55,0.015,down,NA,ENSMUSG00000000957.13
+aDR,Maco1,macoilin 1,protein-coding,0.3,0.015,up,NA,ENSMUSG00000028826.16
+aDR,Calcrl,calcitonin receptor-like,protein-coding,-1.03,0.015,down,NA,ENSMUSG00000059588.16
+aDR,Cry1,cryptochrome circadian regulator 1,protein-coding,0.35,0.015,up,NA,ENSMUSG00000020038.12
+aDR,Prxl2c,peroxiredoxin like 2C,protein-coding,0.3,0.015,up,NA,ENSMUSG00000021482.12
+aDR,Syt17,synaptotagmin XVII,protein-coding,-1.24,0.015,down,NA,ENSMUSG00000058420.10
+aDR,Erbb3,erb-b2 receptor tyrosine kinase 3,protein-coding,-0.92,0.015,down,NA,ENSMUSG00000018166.10
+aDR,Tmem229a,transmembrane protein 229A,protein-coding,-0.5,0.015,down,NA,ENSMUSG00000048022.12
+aDR,Hcn2,"hyperpolarization-activated, cyclic nucleotide-gated K+ 2",protein-coding,-0.53,0.016,down,NA,ENSMUSG00000020331.12
+aDR,Meg3,maternally expressed 3,ncRNA,0.25,0.016,up,NA,ENSMUSG00000021268.20
+aDR,Olig2,oligodendrocyte transcription factor 2,protein-coding,-0.63,0.016,down,NA,ENSMUSG00000039830.11
+aDR,Gm42912,NA,NA,0.5,0.016,up,NA,ENSMUSG00000105640.3
+aDR,Dnah11,"dynein, axonemal, heavy chain 11",protein-coding,-0.94,0.016,down,NA,ENSMUSG00000018581.16
+aDR,Tef,thyrotroph embryonic factor,protein-coding,0.28,0.016,up,NA,ENSMUSG00000022389.17
+aDR,Mapk8ip1,mitogen-activated protein kinase 8 interacting protein 1,protein-coding,-0.24,0.016,down,NA,ENSMUSG00000027223.17
+aDR,Padi2,"peptidyl arginine deiminase, type II",protein-coding,-0.71,0.016,down,NA,ENSMUSG00000028927.8
+aDR,Usp49,ubiquitin specific peptidase 49,protein-coding,0.92,0.016,up,NA,ENSMUSG00000090115.9
+aDR,4930578G10Rik,RIKEN cDNA 4930578G10 gene,ncRNA,0.39,0.021,up,NA,ENSMUSG00000054885.14
+aDR,Acaa1a,acetyl-Coenzyme A acyltransferase 1A,protein-coding,-0.24,0.022,down,NA,ENSMUSG00000036138.18
+aDR,Cldn5,claudin 5,protein-coding,-0.64,0.022,down,NA,ENSMUSG00000041378.3
+aDR,Gm74511,NA,NA,-0.52,0.023,down,NA,ENSMUSG00000121500.2
+aDR,Jazf1,JAZF zinc finger 1,protein-coding,-0.51,0.023,down,NA,ENSMUSG00000063568.13
+aDR,Niban2,niban apoptosis regulator 2,protein-coding,-0.43,0.023,down,NA,ENSMUSG00000026796.18
+aDR,Gab1,growth factor receptor bound protein 2-associated protein 1,protein-coding,-0.5,0.024,down,NA,ENSMUSG00000031714.12
+aDR,Slco4a1,"solute carrier organic anion transporter family, member 4a1",protein-coding,0.46,0.026,up,NA,ENSMUSG00000038963.17
+aDR,Mt2,metallothionein 2,protein-coding,0.66,0.027,up,NA,ENSMUSG00000031762.9
+aDR,Grb2,growth factor receptor bound protein 2,protein-coding,0.28,0.028,up,NA,ENSMUSG00000059923.15
+aDR,Fam163b,"family with sequence similarity 163, member B",protein-coding,0.59,0.028,up,NA,ENSMUSG00000009216.9
+aDR,Pla2g4a,"phospholipase A2, group IVA (cytosolic, calcium-dependent)",protein-coding,-1.24,0.029,down,NA,ENSMUSG00000056220.16
+aDR,Klhdc8a,kelch domain containing 8A,protein-coding,-0.62,0.03,down,NA,ENSMUSG00000042115.6
+aDR,Sema6d,"sema domain, transmembrane domain (TM), and cytoplasmic domain, (semaphorin) 6D",protein-coding,-0.29,0.032,down,NA,ENSMUSG00000027200.19
+aDR,Utp20,UTP20 small subunit processome component,protein-coding,0.63,0.032,up,NA,ENSMUSG00000004356.10
+aDR,Jmy,junction-mediating and regulatory protein,protein-coding,0.33,0.032,up,NA,ENSMUSG00000021690.12
+aDR,Scg5,secretogranin V,protein-coding,0.26,0.032,up,NA,ENSMUSG00000023236.9
+aDR,Enpp6,ectonucleotide pyrophosphatase/phosphodiesterase 6,protein-coding,-0.77,0.032,down,NA,ENSMUSG00000038173.17
+aDR,Prr18,proline rich 18,protein-coding,-0.68,0.032,down,NA,ENSMUSG00000055945.10
+aDR,Sh3bp4,SH3-domain binding protein 4,protein-coding,-0.55,0.033,down,NA,ENSMUSG00000036206.14
+aDR,Ramp2,receptor (calcitonin) activity modifying protein 2,protein-coding,0.54,0.034,up,NA,ENSMUSG00000001240.15
+aDR,Ptp4a2,protein tyrosine phosphatase 4a2,protein-coding,-0.23,0.035,down,NA,ENSMUSG00000028788.16
+aDR,Eng,endoglin,protein-coding,-0.55,0.035,down,NA,ENSMUSG00000026814.18
+aDR,S100a16,S100 calcium binding protein A16,protein-coding,-0.35,0.038,down,NA,ENSMUSG00000074457.12
+aDR,Sort1,sortilin 1,protein-coding,-0.41,0.038,down,NA,ENSMUSG00000068747.16
+aDR,Svip,small VCP/p97-interacting protein,protein-coding,-0.27,0.04,down,NA,ENSMUSG00000074093.6
+aDR,Mxi1,"MAX interactor 1, dimerization protein",protein-coding,0.27,0.04,up,NA,ENSMUSG00000025025.16
+aDR,Serpinb1a,"serine (or cysteine) peptidase inhibitor, clade B, member 1a",protein-coding,-0.79,0.04,down,NA,ENSMUSG00000044734.18
+aDR,Pacs2,phosphofurin acidic cluster sorting protein 2,protein-coding,-0.5,0.042,down,NA,ENSMUSG00000021143.12
+aDR,Pip4k2a,"phosphatidylinositol-5-phosphate 4-kinase, type II, alpha",protein-coding,-0.52,0.043,down,NA,ENSMUSG00000026737.14
+aDR,Flt1,FMS-like tyrosine kinase 1,protein-coding,-0.41,0.043,down,NA,ENSMUSG00000029648.15
+aDR,Slc38a3,"solute carrier family 38, member 3",protein-coding,-0.39,0.044,down,NA,ENSMUSG00000010064.17
+aDR,Cyp27a1,"cytochrome P450, family 27, subfamily a, polypeptide 1",protein-coding,-0.4,0.044,down,NA,ENSMUSG00000026170.8
+aDR,Elovl5,ELOVL fatty acid elongase 5,protein-coding,-0.29,0.046,down,NA,ENSMUSG00000032349.15
+aDR,Mtus2,microtubule associated tumor suppressor candidate 2,protein-coding,0.32,0.049,up,NA,ENSMUSG00000029651.18
+aDR,Abhd14a,abhydrolase domain containing 14A,protein-coding,-0.38,0.049,down,NA,ENSMUSG00000042210.20
+aDR,Epb41l2,erythrocyte membrane protein band 4.1 like 2,protein-coding,-0.51,0.05,down,NA,ENSMUSG00000019978.18
+aDR,Farp1,"FERM, ARH/RhoGEF and pleckstrin domain protein 1",protein-coding,-0.25,0.05,down,NA,ENSMUSG00000025555.17
+aDR,Fmo2,flavin containing monooxygenase 2,protein-coding,0.93,0.05,up,NA,ENSMUSG00000040170.15
+aging_18v3,C4b,complement C4B (Chido blood group),protein-coding,2.31,2.5e-23,up,1,ENSMUSG00000073418.6
+aging_18v3,Gfap,glial fibrillary acidic protein,protein-coding,1.11,4.3e-23,up,1,ENSMUSG00000020932.16
+aging_18v3,Fam163b,"family with sequence similarity 163, member B",protein-coding,1.67,1.7000000000000002e-22,up,1,ENSMUSG00000009216.9
+aging_18v3,Ctss,cathepsin S,protein-coding,1.2,9.4e-14,up,1,ENSMUSG00000038642.12
+aging_18v3,C1qb,"complement component 1, q subcomponent, beta polypeptide",protein-coding,1.21,1.4e-13,up,1,ENSMUSG00000036905.10
+aging_18v3,Ctsd,cathepsin D,protein-coding,0.63,3.1e-11,up,1,ENSMUSG00000007891.18
+aging_18v3,Clec7a,"C-type lectin domain family 7, member a",protein-coding,3.55,2.3e-10,up,1,ENSMUSG00000079293.13
+aging_18v3,Tyrobp,TYRO protein tyrosine kinase binding protein,protein-coding,1.48,1.4e-9,up,1,ENSMUSG00000030579.12
+aging_18v3,C1qc,"complement component 1, q subcomponent, C chain",protein-coding,1.13,2.3e-8,up,1,ENSMUSG00000036896.7
+aging_18v3,H2-K1,"histocompatibility 2, K1, K region",protein-coding,0.91,6.3e-8,up,1,ENSMUSG00000061232.18
+aging_18v3,Pcdhga7,"protocadherin gamma subfamily A, 7",protein-coding,0.83,1.9e-7,up,1,ENSMUSG00000103472.3
+aging_18v3,B2m,beta-2 microglobulin,protein-coding,0.77,2e-7,up,1,ENSMUSG00000060802.10
+aging_18v3,C1qa,"complement component 1, q subcomponent, alpha polypeptide",protein-coding,1.19,2.3e-7,up,1,ENSMUSG00000036887.7
+aging_18v3,Lpl,lipoprotein lipase,protein-coding,2.25,7.3e-7,up,1,ENSMUSG00000015568.18
+aging_18v3,Ostn,osteocrin,protein-coding,4.14,7.3e-7,up,1,ENSMUSG00000052276.10
+aging_18v3,Lilrb4a,"leukocyte immunoglobulin-like receptor, subfamily B, member 4A",protein-coding,4.48,8.9e-7,up,1,ENSMUSG00000112148.3
+aging_18v3,Pcdhga8,"protocadherin gamma subfamily A, 8",protein-coding,0.78,1.8e-6,up,1,ENSMUSG00000103897.3
+aging_18v3,Cst7,cystatin F (leukocystatin),protein-coding,4.83,8.2e-6,up,1,ENSMUSG00000068129.7
+aging_18v3,Gpnmb,glycoprotein (transmembrane) nmb,protein-coding,1.63,1.4e-5,up,1,ENSMUSG00000029816.12
+aging_18v3,Lgals3,"lectin, galactose binding, soluble 3",protein-coding,1.68,1.8e-5,up,1,ENSMUSG00000050335.19
+aging_18v3,Trem2,triggering receptor expressed on myeloid cells 2,protein-coding,1.6,2e-5,up,1,ENSMUSG00000023992.16
+aging_18v3,H2-Q6,"histocompatibility 2, Q region locus 6",protein-coding,2.35,2e-5,up,1,ENSMUSG00000073409.14
+aging_18v3,Serping1,"serine (or cysteine) peptidase inhibitor, clade G, member 1",protein-coding,0.84,3e-5,up,1,ENSMUSG00000023224.14
+aging_18v3,Cd68,CD68 antigen,protein-coding,1.35,8.8e-5,up,1,ENSMUSG00000018774.15
+aging_18v3,Mpeg1,macrophage expressed gene 1,protein-coding,1.65,1.2e-4,up,1,ENSMUSG00000046805.13
+aging_18v3,Fcer1g,"Fc receptor, IgE, high affinity I, gamma polypeptide",protein-coding,1.21,1.2e-4,up,1,ENSMUSG00000058715.13
+aging_18v3,Ctsz,cathepsin Z,protein-coding,0.55,1.9e-4,up,1,ENSMUSG00000016256.12
+aging_18v3,Fabp7,"fatty acid binding protein 7, brain",protein-coding,-0.8,2e-4,down,2,ENSMUSG00000019874.13
+aging_18v3,Qprt,quinolinate phosphoribosyltransferase,protein-coding,1.51,2e-4,up,1,ENSMUSG00000030674.7
+aging_18v3,Fmn1,formin 1,protein-coding,0.91,2e-4,up,1,ENSMUSG00000044042.21
+aging_18v3,Tlr2,toll-like receptor 2,protein-coding,1.8,2e-4,up,1,ENSMUSG00000027995.12
+aging_18v3,Aif1,allograft inflammatory factor 1,protein-coding,1.64,3.1e-4,up,1,ENSMUSG00000024397.16
+aging_18v3,Lgals3bp,"lectin, galactoside-binding, soluble, 3 binding protein",protein-coding,1.46,3.1e-4,up,1,ENSMUSG00000033880.13
+aging_18v3,Ccnd1,cyclin D1,protein-coding,-0.93,3.1e-4,down,2,ENSMUSG00000070348.7
+aging_18v3,A330023F24Rik,RIKEN cDNA A330023F24 gene,ncRNA,0.54,3.1e-4,up,1,ENSMUSG00000096929.10
+aging_18v3,Stra6,stimulated by retinoic acid gene 6,protein-coding,1.33,3.4e-4,up,1,ENSMUSG00000032327.16
+aging_18v3,Tpbg,trophoblast glycoprotein,protein-coding,0.96,5.7e-4,up,1,ENSMUSG00000035274.15
+aging_18v3,Irgm1,immunity-related GTPase family M member 1,protein-coding,1.17,5.7e-4,up,1,ENSMUSG00000046879.9
+aging_18v3,Pcdhgb1,"protocadherin gamma subfamily B, 1",protein-coding,0.98,7e-4,up,1,ENSMUSG00000103037.3
+aging_18v3,Gpx3,glutathione peroxidase 3,protein-coding,1.05,7.8e-4,up,1,ENSMUSG00000018339.14
+aging_18v3,Itpr3,"inositol 1,4,5-triphosphate receptor 3",protein-coding,1.03,7.9e-4,up,1,ENSMUSG00000042644.11
+aging_18v3,H2-Q7,"histocompatibility 2, Q region locus 7",protein-coding,2.02,9.6e-4,up,1,ENSMUSG00000060550.19
+aging_18v3,Hexb,hexosaminidase B,protein-coding,0.58,0.0011,up,1,ENSMUSG00000021665.11
+aging_18v3,Mpzl2,myelin protein zero-like 2,protein-coding,2.03,0.0011,up,1,ENSMUSG00000032092.7
+aging_18v3,Tmem104,transmembrane protein 104,protein-coding,0.6,0.0013,up,1,ENSMUSG00000045980.15
+aging_18v3,Cx3cr1,C-X3-C motif chemokine receptor 1,protein-coding,0.78,0.002,up,1,ENSMUSG00000052336.10
+aging_18v3,C3ar1,complement component 3a receptor 1,protein-coding,1.45,0.0021,up,1,ENSMUSG00000040552.10
+aging_18v3,Ctsh,cathepsin H,protein-coding,0.77,0.0021,up,1,ENSMUSG00000032359.16
+aging_18v3,Gm32113,"predicted gene, 32113",ncRNA,-0.43,0.0024,down,3,ENSMUSG00000120773.1
+aging_18v3,Fcgr2b,"Fc receptor, IgG, low affinity IIb",protein-coding,1.62,0.0027,up,1,ENSMUSG00000026656.17
+aging_18v3,Cda,cytidine deaminase,protein-coding,1.35,0.004,up,1,ENSMUSG00000028755.5
+aging_18v3,Pcdhgb6,"protocadherin gamma subfamily B, 6",protein-coding,0.48,0.0042,up,1,ENSMUSG00000103088.3
+aging_18v3,Gbp6,guanylate binding protein 6,protein-coding,1.2,0.0042,up,1,ENSMUSG00000104713.6
+aging_18v3,Ankdd1b,ankyrin repeat and death domain containing 1B,protein-coding,2.85,0.0046,up,1,ENSMUSG00000047117.15
+aging_18v3,Psmb8,"proteasome (prosome, macropain) subunit, beta type 8 (large multifunctional peptidase 7)",protein-coding,1.12,0.0047,up,1,ENSMUSG00000024338.17
+aging_18v3,Cracdl,capping protein inhibiting regulator of actin like,protein-coding,0.55,0.0047,up,1,ENSMUSG00000026090.18
+aging_18v3,Scn2b,"sodium channel, voltage-gated, type II, beta",protein-coding,-0.39,0.0048,down,3,ENSMUSG00000070304.14
+aging_18v3,Hsph1,heat shock 105kDa/110kDa protein 1,protein-coding,-0.44,0.0059,down,2,ENSMUSG00000029657.17
+aging_18v3,Cxcl16,C-X-C motif chemokine ligand 16,protein-coding,1.89,0.0087,up,1,ENSMUSG00000018920.13
+aging_18v3,Csf3r,colony stimulating factor 3 receptor,protein-coding,1.7,0.011,up,1,ENSMUSG00000028859.16
+aging_18v3,Polr3b,polymerase (RNA) III (DNA directed) polypeptide B,protein-coding,0.64,0.012,up,4,ENSMUSG00000034453.10
+aging_18v3,Aldh2,"aldehyde dehydrogenase 2, mitochondrial",protein-coding,0.35,0.013,up,1,ENSMUSG00000029455.16
+aging_18v3,Hspa5,heat shock protein 5,protein-coding,-0.42,0.017,down,3,ENSMUSG00000026864.15
+aging_18v3,Serpina3n,"serine (or cysteine) peptidase inhibitor, clade A, member 3N",protein-coding,1.31,0.017,up,1,ENSMUSG00000021091.10
+aging_18v3,Gabra2,gamma-aminobutyric acid type A receptor subunit alpha 2,protein-coding,-0.43,0.017,down,2,ENSMUSG00000000560.11
+aging_18v3,Plek,pleckstrin,protein-coding,0.77,0.017,up,1,ENSMUSG00000020120.17
+aging_18v3,Pcdhb14,protocadherin beta 14,protein-coding,0.69,0.017,up,1,ENSMUSG00000044043.5
+aging_18v3,Clec2l,"C-type lectin domain family 2, member L",protein-coding,-0.41,0.018,down,3,ENSMUSG00000079598.6
+aging_18v3,Dock6,dedicator of cytokinesis 6,protein-coding,1.14,0.019,up,4,ENSMUSG00000032198.11
+aging_18v3,Cd300c2,CD300C molecule 2,protein-coding,1.62,0.019,up,1,ENSMUSG00000044811.16
+aging_18v3,Rprml,reprimo-like,protein-coding,1.64,0.019,up,1,ENSMUSG00000046215.4
+aging_18v3,Cmtm7,CKLF-like MARVEL transmembrane domain containing 7,protein-coding,0.69,0.02,up,1,ENSMUSG00000032436.19
+aging_18v3,Kdm6a,lysine (K)-specific demethylase 6A,protein-coding,0.53,0.02,up,1,ENSMUSG00000037369.19
+aging_18v3,Wdr6,WD repeat domain 6,protein-coding,0.42,0.02,up,4,ENSMUSG00000066357.8
+aging_18v3,Gm66006,NA,NA,1.43,0.02,up,4,ENSMUSG00000139722.1
+aging_18v3,Laptm5,lysosomal-associated protein transmembrane 5,protein-coding,0.63,0.023,up,1,ENSMUSG00000028581.19
+aging_18v3,Slc11a1,"solute carrier family 11 (proton-coupled divalent metal ion transporters), member 1",protein-coding,1.79,0.024,up,1,ENSMUSG00000026177.13
+aging_18v3,A530053G22Rik,RIKEN cDNA A530053G22 gene,ncRNA,2.08,0.025,up,1,ENSMUSG00000046764.10
+aging_18v3,Lyz2,lysozyme 2,protein-coding,2,0.025,up,1,ENSMUSG00000069516.10
+aging_18v3,Prr16,proline rich 16,protein-coding,-0.79,0.025,down,2,ENSMUSG00000073565.7
+aging_18v3,Nr3c2,"nuclear receptor subfamily 3, group C, member 2",protein-coding,0.64,0.026,up,1,ENSMUSG00000031618.15
+aging_18v3,Ifi27,"interferon, alpha-inducible protein 27",protein-coding,0.87,0.026,up,1,ENSMUSG00000064215.15
+aging_18v3,Plxnd1,plexin D1,protein-coding,1.05,0.028,up,1,ENSMUSG00000030123.17
+aging_18v3,Cep83os,"centrosomal protein 83, opposite strand",ncRNA,0.48,0.028,up,1,ENSMUSG00000097164.5
+aging_18v3,Cyba,"cytochrome b-245, alpha polypeptide",protein-coding,0.78,0.029,up,1,ENSMUSG00000006519.13
+aging_18v3,Pcdha3,protocadherin alpha 3,protein-coding,1.48,0.029,up,1,ENSMUSG00000102312.3
+aging_18v3,Cfh,complement component factor h,protein-coding,0.67,0.029,up,1,ENSMUSG00000026365.17
+aging_18v3,Rin2,Ras and Rab interactor 2,protein-coding,0.64,0.03,up,4,ENSMUSG00000001768.18
+aging_18v3,Snca,"synuclein, alpha",protein-coding,-0.88,0.03,down,2,ENSMUSG00000025889.15
+aging_18v3,Elavl4,ELAV like RNA binding protein 4,protein-coding,-0.28,0.03,down,3,ENSMUSG00000028546.19
+aging_18v3,Comp,cartilage oligomeric matrix protein,protein-coding,1.4,0.03,up,1,ENSMUSG00000031849.11
+aging_18v3,Nrep,neuronal regeneration related protein,protein-coding,-0.38,0.03,down,2,ENSMUSG00000042834.17
+aging_18v3,Pcdhb6,protocadherin beta 6,protein-coding,1.17,0.031,up,1,ENSMUSG00000051678.5
+aging_18v3,Gpr17,G protein-coupled receptor 17,protein-coding,-1.07,0.031,down,2,ENSMUSG00000052229.7
+aging_18v3,Ampd2,adenosine monophosphate deaminase 2,protein-coding,-0.38,0.031,down,3,ENSMUSG00000027889.19
+aging_18v3,Ppp1r14c,"protein phosphatase 1, regulatory inhibitor subunit 14C",protein-coding,-0.66,0.032,down,2,ENSMUSG00000040653.8
+aging_18v3,Abca2,"ATP-binding cassette, sub-family A member 2",protein-coding,0.38,0.032,up,1,ENSMUSG00000026944.20
+aging_18v3,Hspg2,perlecan (heparan sulfate proteoglycan 2),protein-coding,1.91,0.032,up,4,ENSMUSG00000028763.20
+aging_18v3,Pcdha8,protocadherin alpha 8,protein-coding,0.87,0.032,up,1,ENSMUSG00000103800.3
+aging_18v3,Cd72,CD72 antigen,protein-coding,1.79,0.034,up,1,ENSMUSG00000028459.13
+aging_18v3,Pla2g15,"phospholipase A2, group XV",protein-coding,0.62,0.036,up,1,ENSMUSG00000031903.9
+aging_18v3,G530011O06Riky,NA,NA,1.62,0.036,up,1,ENSMUSG00000095366.4
+aging_18v3,Thbs3,thrombospondin 3,protein-coding,-1.57,0.036,down,3,ENSMUSG00000028047.13
+aging_18v3,Per3,period circadian clock 3,protein-coding,0.49,0.036,up,1,ENSMUSG00000028957.14
+aging_18v3,Aebp1,AE binding protein 1,protein-coding,0.98,0.039,up,1,ENSMUSG00000020473.15
+aging_18v3,Car4,carbonic anhydrase 4,protein-coding,-0.43,0.039,down,2,ENSMUSG00000000805.20
+aging_18v3,Kcnk1,"potassium channel, subfamily K, member 1",protein-coding,-0.3,0.039,down,3,ENSMUSG00000033998.11
+aging_18v3,Crebzf,CREB/ATF bZIP transcription factor,protein-coding,-0.64,0.039,down,3,ENSMUSG00000051451.8
+aging_18v3,Fcgr3,"Fc receptor, IgG, low affinity III",protein-coding,1.23,0.039,up,1,ENSMUSG00000059498.15
+aging_18v3,Kcnmb4os2,"potassium large conductance calcium-activated channel, subfamily M, beta member 4, opposite strand 2",ncRNA,1.59,0.039,up,1,ENSMUSG00000085837.11
+aging_18v3,Neat1,nuclear paraspeckle assembly transcript 1 (non-protein coding),ncRNA,0.57,0.043,up,4,ENSMUSG00000092274.6
+aging_18v3,Tap2,"transporter 2, ATP-binding cassette, sub-family B (MDR/TAP)",protein-coding,0.98,0.044,up,1,ENSMUSG00000024339.14
+aging_18v3,Dapk1,death associated protein kinase 1,protein-coding,-0.79,0.046,down,3,ENSMUSG00000021559.16
+aging_18v3,Ccl6,C-C motif chemokine ligand 6,protein-coding,1.49,0.048,up,1,ENSMUSG00000018927.5
+aging_18v3,Etnppl,ethanolamine phosphate phospholyase,protein-coding,0.47,0.048,up,1,ENSMUSG00000019232.16
+aging_21v3,Fam163b,"family with sequence similarity 163, member B",protein-coding,1.79,3.0000000000000004e-22,up,1,ENSMUSG00000009216.9
+aging_21v3,C4b,complement C4B (Chido blood group),protein-coding,1.88,2.2e-12,up,1,ENSMUSG00000073418.6
+aging_21v3,Gfap,glial fibrillary acidic protein,protein-coding,0.85,1e-10,up,1,ENSMUSG00000020932.16
+aging_21v3,Clec7a,"C-type lectin domain family 7, member a",protein-coding,3.73,1e-10,up,1,ENSMUSG00000079293.13
+aging_21v3,H2-K1,"histocompatibility 2, K1, K region",protein-coding,1.02,1e-8,up,1,ENSMUSG00000061232.18
+aging_21v3,Cldn11,claudin 11,protein-coding,-1.1,1e-7,down,2,ENSMUSG00000037625.9
+aging_21v3,C1qb,"complement component 1, q subcomponent, beta polypeptide",protein-coding,1.02,1.2e-7,up,1,ENSMUSG00000036905.10
+aging_21v3,Ctss,cathepsin S,protein-coding,1,1.8e-7,up,1,ENSMUSG00000038642.12
+aging_21v3,Pcdhga8,"protocadherin gamma subfamily A, 8",protein-coding,0.89,1.8e-7,up,1,ENSMUSG00000103897.3
+aging_21v3,Ostn,osteocrin,protein-coding,4.28,8.8e-7,up,1,ENSMUSG00000052276.10
+aging_21v3,Tpbg,trophoblast glycoprotein,protein-coding,1.25,1.7e-6,up,1,ENSMUSG00000035274.15
+aging_21v3,Ctsd,cathepsin D,protein-coding,0.53,2.7e-6,up,1,ENSMUSG00000007891.18
+aging_21v3,Gpnmb,glycoprotein (transmembrane) nmb,protein-coding,1.81,3.7e-6,up,1,ENSMUSG00000029816.12
+aging_21v3,Cd68,CD68 antigen,protein-coding,1.55,1.2e-5,up,1,ENSMUSG00000018774.15
+aging_21v3,Cracdl,capping protein inhibiting regulator of actin like,protein-coding,0.77,1.2e-5,up,1,ENSMUSG00000026090.18
+aging_21v3,Cst7,cystatin F (leukocystatin),protein-coding,4.91,1.3e-5,up,1,ENSMUSG00000068129.7
+aging_21v3,Prr35,proline rich 35,protein-coding,0.85,2.2e-5,up,1,ENSMUSG00000025727.10
+aging_21v3,Lgals3,"lectin, galactose binding, soluble 3",protein-coding,1.78,2.3e-5,up,1,ENSMUSG00000050335.19
+aging_21v3,Tuba1a,"tubulin, alpha 1A",protein-coding,-0.31,2.7e-5,down,2,ENSMUSG00000072235.8
+aging_21v3,Serping1,"serine (or cysteine) peptidase inhibitor, clade G, member 1",protein-coding,0.89,2.7e-5,up,1,ENSMUSG00000023224.14
+aging_21v3,C1qc,"complement component 1, q subcomponent, C chain",protein-coding,0.99,2.7e-5,up,1,ENSMUSG00000036896.7
+aging_21v3,A330023F24Rik,RIKEN cDNA A330023F24 gene,ncRNA,0.63,3.6e-5,up,1,ENSMUSG00000096929.10
+aging_21v3,Fcgr2b,"Fc receptor, IgG, low affinity IIb",protein-coding,2.05,3.7e-5,up,1,ENSMUSG00000026656.17
+aging_21v3,C1qa,"complement component 1, q subcomponent, alpha polypeptide",protein-coding,1.09,3.7e-5,up,1,ENSMUSG00000036887.7
+aging_21v3,Hmgcs1,3-hydroxy-3-methylglutaryl-Coenzyme A synthase 1,protein-coding,-0.51,4.8e-5,down,2,ENSMUSG00000093930.4
+aging_21v3,Hsph1,heat shock 105kDa/110kDa protein 1,protein-coding,-0.61,5.2e-5,down,2,ENSMUSG00000029657.17
+aging_21v3,B2m,beta-2 microglobulin,protein-coding,0.69,6.4e-5,up,1,ENSMUSG00000060802.10
+aging_21v3,H2-Q6,"histocompatibility 2, Q region locus 6",protein-coding,2.35,7.1e-5,up,1,ENSMUSG00000073409.14
+aging_21v3,Plxnd1,plexin D1,protein-coding,1.56,7.7e-5,up,1,ENSMUSG00000030123.17
+aging_21v3,Ctsz,cathepsin Z,protein-coding,0.6,1e-4,up,1,ENSMUSG00000016256.12
+aging_21v3,Mal,"myelin and lymphocyte protein, T cell differentiation protein",protein-coding,-0.84,1.2e-4,down,2,ENSMUSG00000027375.16
+aging_21v3,Tyrobp,TYRO protein tyrosine kinase binding protein,protein-coding,1.14,1.8e-4,up,1,ENSMUSG00000030579.12
+aging_21v3,Gabra2,gamma-aminobutyric acid type A receptor subunit alpha 2,protein-coding,-0.58,2.8e-4,down,2,ENSMUSG00000000560.11
+aging_21v3,Lilrb4a,"leukocyte immunoglobulin-like receptor, subfamily B, member 4A",protein-coding,3.79,3.2e-4,up,1,ENSMUSG00000112148.3
+aging_21v3,Mpzl2,myelin protein zero-like 2,protein-coding,2.27,3.4e-4,up,1,ENSMUSG00000032092.7
+aging_21v3,Psmb8,"proteasome (prosome, macropain) subunit, beta type 8 (large multifunctional peptidase 7)",protein-coding,1.34,3.4e-4,up,1,ENSMUSG00000024338.17
+aging_21v3,Lpl,lipoprotein lipase,protein-coding,1.91,3.4e-4,up,1,ENSMUSG00000015568.18
+aging_21v3,Gpx3,glutathione peroxidase 3,protein-coding,1.16,3.4e-4,up,1,ENSMUSG00000018339.14
+aging_21v3,Snhg11,small nucleolar RNA host gene 11,ncRNA,0.45,3.9e-4,up,1,ENSMUSG00000044349.18
+aging_21v3,Irgm1,immunity-related GTPase family M member 1,protein-coding,1.24,4.8e-4,up,1,ENSMUSG00000046879.9
+aging_21v3,Fcer1g,"Fc receptor, IgE, high affinity I, gamma polypeptide",protein-coding,1.21,4.9e-4,up,1,ENSMUSG00000058715.13
+aging_21v3,Lgals3bp,"lectin, galactoside-binding, soluble, 3 binding protein",protein-coding,1.49,9.5e-4,up,1,ENSMUSG00000033880.13
+aging_21v3,Snca,"synuclein, alpha",protein-coding,-1.19,0.0012,down,2,ENSMUSG00000025889.15
+aging_21v3,Rprml,reprimo-like,protein-coding,2.05,0.0014,up,1,ENSMUSG00000046215.4
+aging_21v3,Efnb3,ephrin B3,protein-coding,-0.79,0.0015,down,2,ENSMUSG00000003934.7
+aging_21v3,Cmtm7,CKLF-like MARVEL transmembrane domain containing 7,protein-coding,0.85,0.0015,up,1,ENSMUSG00000032436.19
+aging_21v3,Erap1,endoplasmic reticulum aminopeptidase 1,protein-coding,1.37,0.0015,up,1,ENSMUSG00000021583.9
+aging_21v3,Trem2,triggering receptor expressed on myeloid cells 2,protein-coding,1.41,0.0015,up,1,ENSMUSG00000023992.16
+aging_21v3,Sema5a,"sema domain, seven thrombospondin repeats (type 1 and type 1-like), transmembrane domain (TM) and short cytoplasmic domain, (semaphorin) 5A",protein-coding,0.64,0.0016,up,1,ENSMUSG00000022231.12
+aging_21v3,H2-Q7,"histocompatibility 2, Q region locus 7",protein-coding,2.04,0.0016,up,1,ENSMUSG00000060550.19
+aging_21v3,3222401L13Rik,RIKEN cDNA 3222401L13 gene,ncRNA,0.82,0.0019,up,1,ENSMUSG00000073590.5
+aging_21v3,Ugt8a,UDP galactosyltransferase 8A,protein-coding,-0.85,0.0019,down,2,ENSMUSG00000032854.14
+aging_21v3,Casp1,caspase 1,protein-coding,1.62,0.0019,up,1,ENSMUSG00000025888.8
+aging_21v3,Septin6,septin 6,protein-coding,0.39,0.0021,up,1,ENSMUSG00000050379.17
+aging_21v3,Rorc,RAR-related orphan receptor gamma,protein-coding,0.71,0.0026,up,1,ENSMUSG00000028150.16
+aging_21v3,Mkrn3,"makorin, ring finger protein, 3",protein-coding,-1.81,0.0026,down,2,ENSMUSG00000070527.4
+aging_21v3,Fstl1,follistatin-like 1,protein-coding,-1.04,0.0034,down,2,ENSMUSG00000022816.13
+aging_21v3,Ptpn4,"protein tyrosine phosphatase, non-receptor type 4",protein-coding,-0.72,0.0037,down,2,ENSMUSG00000026384.15
+aging_21v3,Gpr17,G protein-coupled receptor 17,protein-coding,-1.36,0.0038,down,2,ENSMUSG00000052229.7
+aging_21v3,Pcdha8,protocadherin alpha 8,protein-coding,1.07,0.0042,up,1,ENSMUSG00000103800.3
+aging_21v3,Gjc2,"gap junction protein, gamma 2",protein-coding,-0.76,0.0042,down,2,ENSMUSG00000043448.15
+aging_21v3,Pcdhga7,"protocadherin gamma subfamily A, 7",protein-coding,0.6,0.0046,up,1,ENSMUSG00000103472.3
+aging_21v3,Kcnb2,"potassium voltage gated channel, Shab-related subfamily, member 2",protein-coding,-1.02,0.0053,down,2,ENSMUSG00000092083.6
+aging_21v3,Fabp7,"fatty acid binding protein 7, brain",protein-coding,-0.71,0.0056,down,2,ENSMUSG00000019874.13
+aging_21v3,Gsn,gelsolin,protein-coding,-0.69,0.0056,down,2,ENSMUSG00000026879.16
+aging_21v3,Pkd1,"polycystin 1, transient receptor potential channel interacting",protein-coding,0.59,0.0078,up,1,ENSMUSG00000032855.7
+aging_21v3,Cd33,CD33 molecule,protein-coding,1.54,0.0078,up,1,ENSMUSG00000004609.13
+aging_21v3,Zfp607b,zinc finger protein 607B,protein-coding,-1,0.0078,down,2,ENSMUSG00000057093.16
+aging_21v3,Adgre1,adhesion G protein-coupled receptor E1,protein-coding,1.62,0.0078,up,1,ENSMUSG00000004730.17
+aging_21v3,Enpp6,ectonucleotide pyrophosphatase/phosphodiesterase 6,protein-coding,-1,0.0078,down,2,ENSMUSG00000038173.17
+aging_21v3,Vipr2,vasoactive intestinal peptide receptor 2,protein-coding,0.72,0.0083,up,1,ENSMUSG00000011171.13
+aging_21v3,Mog,myelin oligodendrocyte glycoprotein,protein-coding,-0.89,0.0095,down,2,ENSMUSG00000076439.14
+aging_21v3,Ezr,ezrin,protein-coding,0.59,0.0097,up,1,ENSMUSG00000052397.10
+aging_21v3,Nrep,neuronal regeneration related protein,protein-coding,-0.44,0.014,down,2,ENSMUSG00000042834.17
+aging_21v3,Ptk2b,PTK2 protein tyrosine kinase 2 beta,protein-coding,1.38,0.014,up,1,ENSMUSG00000059456.15
+aging_21v3,Ccnd1,cyclin D1,protein-coding,-0.81,0.014,down,2,ENSMUSG00000070348.7
+aging_21v3,Bcas1,brain enriched myelin associated protein 1,protein-coding,-0.59,0.019,down,2,ENSMUSG00000013523.14
+aging_21v3,Ifitm3,interferon induced transmembrane protein 3,protein-coding,0.82,0.019,up,1,ENSMUSG00000025492.8
+aging_21v3,Sox10,SRY (sex determining region Y)-box 10,protein-coding,-0.63,0.019,down,2,ENSMUSG00000033006.12
+aging_21v3,Agtr2,"angiotensin II receptor, type 2",protein-coding,-3.54,0.019,down,2,ENSMUSG00000068122.12
+aging_21v3,Sema4d,"sema domain, immunoglobulin domain (Ig), transmembrane domain (TM) and short cytoplasmic domain, (semaphorin) 4D",protein-coding,-0.41,0.025,down,2,ENSMUSG00000021451.18
+aging_21v3,Stra6,stimulated by retinoic acid gene 6,protein-coding,1.09,0.025,up,1,ENSMUSG00000032327.16
+aging_21v3,Trp53inp2,transformation related protein 53 inducible nuclear protein 2,protein-coding,-0.45,0.026,down,2,ENSMUSG00000038375.17
+aging_21v3,Sh3gl3,SH3-domain GRB2-like 3,protein-coding,-1.37,0.026,down,2,ENSMUSG00000030638.15
+aging_21v3,Syt6,synaptotagmin VI,protein-coding,0.87,0.026,up,1,ENSMUSG00000027849.21
+aging_21v3,Laptm5,lysosomal-associated protein transmembrane 5,protein-coding,0.67,0.027,up,1,ENSMUSG00000028581.19
+aging_21v3,Kazn,"kazrin, periplakin interacting protein",protein-coding,-0.57,0.027,down,2,ENSMUSG00000040606.15
+aging_21v3,A530053G22Rik,RIKEN cDNA A530053G22 gene,ncRNA,2.18,0.027,up,1,ENSMUSG00000046764.10
+aging_21v3,Jam2,junction adhesion molecule 2,protein-coding,-0.42,0.027,down,2,ENSMUSG00000053062.18
+aging_21v3,Hexb,hexosaminidase B,protein-coding,0.51,0.027,up,1,ENSMUSG00000021665.11
+aging_21v3,Hsd11b1,hydroxysteroid 11-beta dehydrogenase 1,protein-coding,-0.43,0.028,down,2,ENSMUSG00000016194.16
+aging_21v3,Comp,cartilage oligomeric matrix protein,protein-coding,1.48,0.029,up,1,ENSMUSG00000031849.11
+aging_21v3,Aebp1,AE binding protein 1,protein-coding,1.07,0.031,up,1,ENSMUSG00000020473.15
+aging_21v3,Fdft1,farnesyl diphosphate farnesyl transferase 1,protein-coding,-0.4,0.032,down,2,ENSMUSG00000021273.13
+aging_21v3,Ccl3,C-C motif chemokine ligand 3,protein-coding,4.48,0.035,up,1,ENSMUSG00000000982.7
+aging_21v3,Osbpl3,oxysterol binding protein-like 3,protein-coding,0.67,0.036,up,1,ENSMUSG00000029822.17
+aging_21v3,Tlx3,"T cell leukemia, homeobox 3",protein-coding,-3.9,0.036,down,2,ENSMUSG00000040610.9
+aging_21v3,Nectin4,nectin cell adhesion molecule 4,protein-coding,0.66,0.036,up,1,ENSMUSG00000006411.14
+aging_21v3,Pde4dip,phosphodiesterase 4D interacting protein (myomegalin),protein-coding,0.35,0.037,up,1,ENSMUSG00000038170.17
+aging_21v3,Pcdhgb6,"protocadherin gamma subfamily B, 6",protein-coding,0.44,0.038,up,1,ENSMUSG00000103088.3
+aging_21v3,Lrp1b,low density lipoprotein-related protein 1B,protein-coding,-0.52,0.039,down,2,ENSMUSG00000049252.18
+aging_21v3,H2-D1,"histocompatibility 2, D region locus 1",protein-coding,0.35,0.039,up,1,ENSMUSG00000073411.14
+aging_21v3,Gjc3,"gap junction protein, gamma 3",protein-coding,-0.55,0.039,down,2,ENSMUSG00000056966.9
+aging_21v3,Parp4,"poly (ADP-ribose) polymerase family, member 4",protein-coding,0.83,0.041,up,1,ENSMUSG00000054509.9
+aging_21v3,Csf2rb,"colony stimulating factor 2 receptor, beta, low-affinity (granulocyte-macrophage)",protein-coding,2.43,0.041,up,1,ENSMUSG00000071713.7
+aging_21v3,Slc11a1,"solute carrier family 11 (proton-coupled divalent metal ion transporters), member 1",protein-coding,1.82,0.042,up,1,ENSMUSG00000026177.13
+aging_21v3,Garre1,granule associated Rac and RHOG effector 1,protein-coding,-0.98,0.043,down,2,ENSMUSG00000066571.15
+aging_21v3,Dusp1,dual specificity phosphatase 1,protein-coding,-0.61,0.045,down,2,ENSMUSG00000024190.9
+aging_21v3,Lyz2,lysozyme 2,protein-coding,2.06,0.045,up,1,ENSMUSG00000069516.10
+aging_21v3,Pllp,plasma membrane proteolipid,protein-coding,-0.74,0.048,down,2,ENSMUSG00000031775.7
+aging_21v3,Tmem278,NA,NA,-0.65,0.048,down,2,ENSMUSG00000073680.4
+aging_21v3,Ncam2,neural cell adhesion molecule 2,protein-coding,-0.56,0.048,down,2,ENSMUSG00000022762.20
+aging_21v3,Aif1,allograft inflammatory factor 1,protein-coding,1.27,0.049,up,1,ENSMUSG00000024397.16
+aging_21v3,Ermn,"ermin, ERM-like protein",protein-coding,-0.65,0.049,down,2,ENSMUSG00000026830.11
+aging_21v3,Cdr2,cerebellar degeneration-related 2,protein-coding,-0.64,0.049,down,2,ENSMUSG00000030878.13
+aging_21v3,Gbp6,guanylate binding protein 6,protein-coding,1.06,0.049,up,1,ENSMUSG00000104713.6

@@ -4,7 +4,7 @@
 
 **Data.** 27 bulk RNA-seq samples (one mouse each) from Hahn *et al.*, *Cell* 2023: 12 aging mice (3, 18, 21 months) and 15 mice of a 19-month rejuvenation experiment, re-processed from the raw reads ([docs/data.md](docs/data.md)).
 
-**Approach.** Reads → QC and trimming → gene counts from STAR alignments with RSEM (GENCODE M39 / GRCm39; kallisto and STAR GeneCounts as sensitivity checks) → DESeq2 → treatment effects compared with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
+**Approach.** Reads → QC and trimming → gene counts from STAR alignments with RSEM (GENCODE M39 / GRCm39; kallisto as sensitivity check) → DESeq2 → treatment effects compared with the aging signal ([docs/pipeline.md](docs/pipeline.md)).
 
 ## Main results (cerebellum, RSEM)
 
@@ -16,10 +16,10 @@
 | Aging-signature score, treated minus control (Welch p) | **+0.82** (p = 0.011) | **−0.82** (p = 0.043) |
 | Hallmark pathways significant in aging and in the treatment | 7: reversed 5, same 2 | 11: **reversed 10**, same 1 |
 
-kallisto and STAR GeneCounts give different counts (for example 139 and 185 DEGs for aDR, 41 and 26 for YMP) but the **same direction in every row** (`results/aging_vs_rejuvenation/`).
+kallisto, run as a sensitivity check, gives different counts (139 DEGs for aDR, 41 for YMP) but the **same direction in every row** (`results/aging_vs_rejuvenation/`).
 
 - **Young plasma reverses part of the cerebellar aging signal:** interferon-response pathways (up in aging) go down; mTORC1, fatty-acid and cholesterol metabolism, p53, hypoxia and oxidative phosphorylation (down in aging) go up.
-- **Dietary restriction does not:** it induces the circadian-clock genes the paper reports (19 of 23 up in all three methods; Cry1, Dbp, Ciart, Cirbp) and reverses some pathways, but not the interferon response, and its aging-signature score rises.
+- **Dietary restriction does not:** it induces the circadian-clock genes the paper reports (19 of 23 up with both methods; Cry1, Dbp, Ciart, Cirbp) and reverses some pathways, but not the interferon response, and its aging-signature score rises.
 - **Limits:** 3–5 mice per group; treatments at 19 months vs aging at 21; aDR female-only, YMP male-only; p-values are indicative.
 
 ## Notebooks
@@ -29,9 +29,9 @@ Run in numerical order. The heavy steps run on the Euler cluster (01).
 |---|---|---|---|
 | 01 | [euler_pipeline](notebooks/01_euler_pipeline.ipynb) | Python | runs the heavy steps on Euler and copies the results back; describes the cluster scripts (`euler/`) |
 | 02 | [qc_trimming](notebooks/02_qc_trimming.ipynb) | Python | QC and trimming decisions with their evidence |
-| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | outlier check, DESeq2 for aging, aDR, YMP (`METHOD` switches the counting method) |
+| 03 | [differential_expression](notebooks/03_differential_expression.ipynb) | R | what changes in each comparison: sample overview, outlier check, DESeq2 for aging, aDR, YMP, annotated DEGs, aging patterns |
 | 04 | [compare_methods](notebooks/04_compare_methods.ipynb) | R | does the counting method change the results? kallisto vs RSEM, technical vs biological variation |
-| 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis: overlap, signature score, pathways |
+| 05 | [aging_vs_rejuvenation](notebooks/05_aging_vs_rejuvenation.ipynb) | R | the main analysis, treatments vs aging: overlap, signature score, pathways, biological themes |
 
 ## Reproduce
 1. **Software:** laptop `pixi install` (exact versions in `pixi.lock`); Euler `bash euler/00_setup.sh` (tool versions pinned there).

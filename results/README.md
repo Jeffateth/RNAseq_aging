@@ -8,7 +8,7 @@ Small outputs are kept in git; large or regenerable files are git-ignored. Terms
 | `kallisto/`, `rsem/` | per-run kallisto and RSEM output unpacked from the Euler tarballs (notebook 01) | no |
 | `euler/` | the result tarballs from Euler (RSEM, STAR, QC; the 626 MB kallisto one is not in git) | yes |
 | `star/` | `counts_unstranded.csv.gz` (STAR counts, genes × runs) and `star_qc.csv` (per run: `input_pairs_M`, `unique_%`, `multi_%`, `STAR_assigned_to_gene_%`, `frac_read1_same_strand` ≈ 0.5 = unstranded) | yes |
-| `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 (RSEM); `aging_deg_patterns.csv` = cluster of each aging DEG by its course over age (`cluster`, `lfc_18v3`, `lfc_21v3`) | no |
+| `de/<method>/` | DESeq2 table per comparison for the method set in notebook 03 (RSEM); `deg_annotation.csv` = every DEG (padj < 0.05) with `symbol`, `name` and `type` (org.Mm.eg.db; NA = no entry), `log2FC`, `padj`, `direction`, `aging_cluster` (aging DEGs, notebook 03 2c) | `deg_annotation.csv` only |
 | `compare/` | kallisto vs RSEM (notebook 04) | summary tables |
 | `aging_vs_rejuvenation/` | the main analysis (notebook 05) | yes |
 
