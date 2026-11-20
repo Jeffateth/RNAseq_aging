@@ -1,0 +1,5 @@
+method,treatment,aging_DEG,shared_reversed,shared_like_aging,lfc_cor_with_aging,score_diff,score_p,hallmark_reversed,hallmark_same,gobp_reversed,gobp_same
+kallisto,aDR,130,0,6,0.374,0.705,0.02,5,4,29,38
+kallisto,YMP,134,2,0,-0.425,-0.808,0.0059,12,4,34,5
+RSEM,aDR,114,0,5,0.454,0.824,0.014,5,2,19,18
+RSEM,YMP,119,2,0,-0.328,-0.808,0.042,10,1,32,1

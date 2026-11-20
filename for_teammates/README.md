@@ -19,7 +19,7 @@ Compare only within a cohort; never pool cohorts (they differ for technical reas
 
 | `cohort` | `group` (mice) | Compare |
 |---|---|---|
-| Aging | `aging 3mo`, `aging 18mo`, `aging 21mo` (4 each, 2 male + 2 female) | 18 or 21 vs 3 months, with sex as covariate |
+| Aging | `aging 3mo`, `aging 18mo`, `aging 21mo` (4 each, 2 male + 2 female) | old (18 + 21) or one age vs 3 months, with sex as covariate |
 | Dietary Intervention | `AL` (4), `aDR` (5); female, 19 months | aDR vs AL |
 | Young Plasma Injection | `PBS` (3), `YMP` (3); male, 19 months | YMP vs PBS |
 

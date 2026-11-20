@@ -1,5 +1,5 @@
 method,intervention,genes,aging_DEG,intervention_DEG,shared,expected_by_chance,shared_reversal,shared_same,fisher_p,lfc_spearman_all,lfc_spearman_agingDEG
-kallisto,aDR,16474,124,139,6,1,0,6,6.4e-4,0.14,0.389
-kallisto,YMP,19860,132,40,2,0.3,2,0,0.029,-0.131,-0.476
-RSEM,aDR,12959,108,117,5,1,0,5,0.0029,0.154,0.438
-RSEM,YMP,16603,116,45,2,0.3,2,0,0.039,-0.143,-0.326
+kallisto,aDR,16368,202,138,5,1.7,1,4,0.028,0.025,-0.002
+kallisto,YMP,17596,209,41,3,0.5,3,0,0.013,-0.125,-0.228
+RSEM,aDR,12955,158,117,5,1.4,0,5,0.014,0.017,0.027
+RSEM,YMP,16183,175,42,2,0.5,2,0,0.076,-0.118,-0.138

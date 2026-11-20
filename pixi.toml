@@ -29,3 +29,4 @@ bioconductor-fgsea = "*"             # gene set enrichment analysis
 r-msigdbr = "*"                      # MSigDB gene sets (Hallmark, GO)
 "bioconductor-org.mm.eg.db" = ">=3.20.0,<4"  # mouse gene names, types and GO terms (DEG annotation)
 matplotlib = ">=3.10.9,<4"
+bioconductor-apeglm = ">=1.28.0,<2"  # shrunken log2 fold changes (lfcShrink, type = "apeglm")

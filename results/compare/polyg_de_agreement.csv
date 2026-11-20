@@ -1,0 +1,4 @@
+contrast,total_DEG_a,total_DEG_b,genes_tested_both,DEG_a,DEG_b,shared,jaccard,same_direction,lfc_spearman_all,lfc_spearman_sig
+aging,211,210,18261,211,210,210,1,1,1,1
+aDR,139,137,16507,139,137,136,0.97,1,1,1
+YMP,44,42,18283,44,40,40,0.91,1,1,1

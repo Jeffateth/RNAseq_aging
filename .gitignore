@@ -22,7 +22,7 @@ results/kallisto_nopolyg/
 results/rsem_nopolyg/
 # tarballs copied back from Euler
 results/euler/kallisto_results.tar.gz
-results/euler/*_nopolyg_results.tar.gz
+results/euler/kallisto_nopolyg_results.tar.gz
 
 # regenerated reports (kept locally, not in the repo)
 results/qc/*.fastp.html

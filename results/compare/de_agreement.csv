@@ -1,5 +1,4 @@
 method_a,method_b,contrast,total_DEG_a,total_DEG_b,genes_tested_both,DEG_a,DEG_b,shared,jaccard,same_direction,lfc_spearman_all,lfc_spearman_sig
-kallisto,RSEM,aging_18v3,126,115,15812,121,115,86,0.57,1,0.839,0.903
-kallisto,RSEM,aging_21v3,134,116,16725,128,116,89,0.57,1,0.824,0.964
+kallisto,RSEM,aging,211,175,15986,202,175,143,0.61,1,0.843,0.958
 kallisto,RSEM,aDR,139,118,12913,128,117,84,0.52,1,0.887,0.954
-kallisto,RSEM,YMP,41,50,17097,40,48,25,0.4,1,0.851,0.916
+kallisto,RSEM,YMP,44,50,16385,41,47,26,0.42,1,0.854,0.909

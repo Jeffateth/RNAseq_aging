@@ -1,9 +1,9 @@
 collection,method,intervention,aging_sets,significant_in_both,reversed,same_direction,NES_spearman_all_sets
-Hallmark,kallisto,aDR,19,8,5,3,0.06
-Hallmark,kallisto,YMP,19,14,11,3,-0.35
-Hallmark,RSEM,aDR,17,7,5,2,0.07
-Hallmark,RSEM,YMP,17,11,10,1,-0.47
-GO_BP,kallisto,aDR,464,66,26,40,0.11
-GO_BP,kallisto,YMP,466,44,35,9,-0.24
-GO_BP,RSEM,aDR,375,48,24,24,0.13
-GO_BP,RSEM,YMP,375,31,28,3,-0.22
+Hallmark,kallisto,aDR,18,8,6,2,-0.29
+Hallmark,kallisto,YMP,18,14,9,5,-0.22
+Hallmark,RSEM,aDR,15,6,6,0,-0.26
+Hallmark,RSEM,YMP,15,11,9,2,-0.38
+GO_BP,kallisto,aDR,508,75,70,5,-0.18
+GO_BP,kallisto,YMP,508,26,18,8,-0.12
+GO_BP,RSEM,aDR,380,51,50,1,-0.19
+GO_BP,RSEM,YMP,380,23,14,9,-0.12

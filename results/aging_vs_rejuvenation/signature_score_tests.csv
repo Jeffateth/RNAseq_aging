@@ -1,5 +1,5 @@
 method,treated,control,n_t,n_c,diff,t_test_p
-kallisto,aDR,AL,5,4,0.726,0.016
-kallisto,YMP,PBS,3,3,-0.789,0.0035
-RSEM,aDR,AL,5,4,0.822,0.011
-RSEM,YMP,PBS,3,3,-0.824,0.043
+kallisto,aDR,AL,5,4,0.193,0.43
+kallisto,YMP,PBS,3,3,-0.731,0.074
+RSEM,aDR,AL,5,4,0.274,0.29
+RSEM,YMP,PBS,3,3,-0.445,0.14
