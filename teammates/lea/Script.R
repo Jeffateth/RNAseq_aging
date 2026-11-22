@@ -1,33 +1,23 @@
-# Lea's analysis, refactored to the team's common setup (proposed baseline). Exported from teammates/lea/Script.ipynb (R); text cells appear as comments.
-# Run from teammates/lea/ with the repo's pixi environment.
+# Lea's analysis on the team setup (proposed baseline). Exported from teammates/lea/Script.ipynb; text cells as comments.
 
 # ====================================================================================================
 # # Aging and rejuvenating interventions in the mouse cerebellum
 #
-# > **Status: proposed common baseline for review, not final.** This is Lea's notebook, reduced to the team's agreed setup so all three of us can work from the same DEG lists and gene set results. What changed and why: `CHANGES.md`. Results, open decisions and presentation check: `HANDOVER.md`.
+# > **Proposed common baseline for review, not final.** Lea's notebook reduced to the team's agreed setup. Changes: `CHANGES.md`. Results, open decisions, slide check: `HANDOVER.md`.
 #
-# **Objective:** describe transcriptional aging in the mouse cerebellum, describe the effects of acute dietary restriction (aDR) and young mouse plasma (YMP), and explore whether each intervention opposes the aging changes.
+# **Question:** how does the cerebellum change with age, what do dietary restriction (aDR) and young plasma (YMP) change, and does either move the aging changes back?
 #
-# - **Reference:** Hahn et al. (2023). **Data:** RSEM quantification (STAR alignments, GENCODE M39) of 27 runs, BioProjects PRJNA875066 (aging) and PRJNA946653 (interventions), read from the repo's `for_teammates/` folder.
-# - **Setup:** the team's common DESeq2 setup (agreed 20 November 2026), summarised in Section 3.
-# - **Run:** from this folder with the repo's pixi environment (R kernel `ir`): `pixi run jupyter nbconvert --to notebook --execute --inplace Script.ipynb`. Outputs go to `output/`. The first run downloads MSigDB release 2026.1 once (checksum-verified by `msigdbr`).
-# - **Scope:** three comparisons, each within its own cohort: aging (old vs young), aDR vs AL, YMP vs PBS. Never pooled across cohorts.
+# - **Data:** RSEM counts (GENCODE M39) of 27 mice from Hahn et al. (2023), in `../../for_teammates/`.
+# - **Run:** `pixi run jupyter nbconvert --to notebook --execute --inplace Script.ipynb` (outputs in `output/`; the first run downloads MSigDB 2026.1 once).
+# - **Comparisons**, each within its own cohort: aging (old vs young), aDR vs AL, YMP vs PBS.
 #
 # | Section | Question |
 # |---|---|
-# | 1 · Import and quality control | Which samples go into the analysis? |
-# | 2 · Exploratory analysis | Do samples group by experiment and condition? |
-# | 3 · Differential expression | Which genes change with age, aDR and YMP? |
-# | 4 · Pathways (Hallmark GSEA) | Which biological processes shift? |
-# | 5 · Aging vs interventions | Do aDR or YMP move aging genes in the opposite direction? |
-#
-# | Lea's original section | Here |
-# |---|---|
-# | 1 Data import, sample exclusion | 1 (same exclusion and haemoglobin check) |
-# | 2 Sample overview (clustering, PCA) | 2 (PCA only) |
-# | 3 DESeq2, volcano plots, heatmaps | 3 (agreed setup; one heatmap) |
-# | 4 GSEA (Hallmark + GO BP) | 4 (Hallmark main figure, GO BP as table; same ranking and seed as Lea's) |
-# | 5a / 5b aging vs interventions | 5 (5b's shrunken fold changes and pathway definition, without the extra tests) |
+# | 1 · Import and QC | Which samples go in? |
+# | 2 · PCA | What drives the main variation? |
+# | 3 · Differential expression | Which genes change? |
+# | 4 · Gene sets (GSEA) | Which processes shift? |
+# | 5 · Aging vs interventions | Do aDR or YMP oppose aging? |
 # ====================================================================================================
 
 # Packages, figure style and output folder
@@ -51,9 +41,7 @@ save_png <- function(p, name, w, h) ggsave(file.path(OUT, name), p, width = w, h
 
 # ====================================================================================================
 # ## 1 · Import and quality control
-# - **What:** load three RSEM tables (genes × samples): **expected counts** (reads per gene), **TPM**, and **effective length** (the gene length RSEM used, which differs slightly per sample).
-# - **Why:** DESeq2 receives counts *plus* effective lengths (the `tximport` workflow), so its normalisation corrects for sequencing depth *and* for per-sample differences in gene length.
-# - **Check:** every gene and sample must have an effective length; the notebook stops otherwise rather than switching to another normalisation.
+# RSEM expected counts, TPM and effective gene lengths. DESeq2 gets counts plus lengths (`tximport` workflow), so it corrects for sequencing depth and per-sample gene length. The notebook stops if any length is missing.
 # ====================================================================================================
 
 # Load the three RSEM tables (genes x samples) and check that they match
@@ -82,9 +70,8 @@ stopifnot(identical(rownames(meta), colnames(counts)))
 
 # ====================================================================================================
 # ### Sample exclusion
-# - **SRR21355389** (aging, 21 months, female) is excluded: its haemoglobin genes are far higher than in any other aging sample (table below), a sign of blood in the tissue. Blood genes would otherwise appear as false aging changes.
-# - **SRR23914572** (AL) is kept (team decision): its unusual genes come from choroid plexus (a neighbouring tissue), not blood, and removing it did not change the direction of the aDR results.
-# - **How to read the table:** `x_vs_max` = SRR21355389's TPM divided by the highest TPM among the other 11 aging samples.
+# - **Excluded: SRR21355389** (21 months): haemoglobin 11–15× above any other aging sample (table: `x_vs_max`), i.e. blood in the tissue, which would appear as false aging changes.
+# - **Kept: SRR23914572** (AL): its unusual genes are choroid plexus, not blood (team decision).
 # ====================================================================================================
 
 # Haemoglobin TPM in the aging samples: SRR21355389 vs the other 11
@@ -105,11 +92,8 @@ meta %>% count(experiment, group, sex) %>% pivot_wider(names_from = sex, values_
   mutate(total = female + male)
 
 # ====================================================================================================
-# ## 2 · Exploratory analysis
-# - **What:** a PCA of all 26 samples.
-# - **Why:** to see the main source of variation before any test, and to spot outliers.
-# - **How:** genes with ≥ 10 reads in ≥ 3 samples; variance-stabilising transformation (`vst`, blind to the groups: log-like values, corrected for depth and gene length, in which low and high counts vary similarly); PCA on the 500 most variable genes.
-# - **How to read:** each point is a mouse; mice close together have similar expression profiles. The % on each axis is the share of variation that axis explains.
+# ## 2 · PCA
+# Variance-stabilised counts (`vst`) of genes with ≥ 10 reads in ≥ 3 samples, 500 most variable genes. Each point is a mouse; close = similar profiles.
 # ====================================================================================================
 
 # VST of all 26 samples, then PCA (top 500 genes); colour and shape = cohort
@@ -131,26 +115,20 @@ p_all <- ggplot(p$d, aes(PC1, PC2, color = experiment, shape = experiment)) + ge
 options(repr.plot.width = 10, repr.plot.height = 8); p_all
 save_png(p_all, "pca_all.png", 10, 8)
 
-# **Reading the PCA:** PC1 (41 %) separates the aging cohort from the two intervention cohorts, and PC2 (13 %) separates aDR from YMP. The largest differences lie between experiments (separate studies, sequencing runs, sexes and ages), so each comparison is analysed within its own cohort only.
+# **Reading:** PC1 (41 %) separates the aging cohort from the intervention cohorts, PC2 (13 %) aDR from YMP. Experiments differ more than conditions, so each comparison stays within its cohort.
 
 # ====================================================================================================
 # ## 3 · Differential expression (DESeq2)
-# | Choice | Setting (team setup) |
-# |---|---|
-# | Input | RSEM expected counts + effective lengths (`DESeqDataSetFromTximport`) |
-# | Aging | old (18 + 21 months, n = 7) vs young (3 months, n = 4), design `~ sex + age_bin` |
-# | aDR | aDR (5) vs AL (4), design `~ condition` (all female) |
-# | YMP | YMP (3) vs PBS (3), design `~ condition` (all male) |
-# | Gene filter | ≥ 10 reads in at least *n* samples, *n* = smallest group (4, 4, 3) |
-# | Test | Wald, `results(alpha = 0.05)` |
-# | DEG | padj < 0.05, no fold-change cutoff |
-# | Fold changes in plots and comparisons | apeglm-shrunken (`lfcShrink`); p-values are not shrunken |
+# | Choice | Setting (agreed) | Why |
+# |---|---|---|
+# | Aging | old (18 + 21 mo, n = 7) vs young (3 mo, n = 4), `~ sex + age_bin` | both sexes in this cohort: the sex term keeps sex differences out of the age test |
+# | aDR, YMP | aDR (5) vs AL (4), YMP (3) vs PBS (3), `~ condition` | single-sex cohorts |
+# | Gene filter | ≥ 10 reads in ≥ smallest-group size (4 / 4 / 3) | a gene can be expressed in one whole group |
+# | Test, DEG | Wald, `alpha = 0.05`; DEG = padj < 0.05, no fold-change cutoff | |
+# | Fold changes in plots | apeglm-shrunken | tames noisy low-count genes; p-values unchanged |
 #
-# - **What DESeq2 does:** normalises for depth and gene length, estimates how much each gene varies between replicate mice (sharing information across genes, which matters with 3–5 mice), then tests each gene with a Wald test (log2FC divided by its standard error).
-# - **Sex term (aging only):** the aging cohort has both sexes (2 males + 2 females per age), and sex differs in brain expression. The term removes these differences, so they do not add noise to the age test. It assumes the age effect is the same in both sexes. The aDR (female) and YMP (male) cohorts are single-sex, so they need no sex term.
-# - **Shrunken fold changes (apeglm):** pull noisy fold changes of low-count genes towards 0, so plots and comparisons are not dominated by genes with few reads. They change no p-value and no DEG call.
-# - **Pooling 18 + 21 months** (team decision): in Lea's original analysis (no sex term), only 16 genes differed between 21 and 18 months, against 143–149 for each vs 3 months. The heatmap below shows the same: 18- and 21-month mice look alike.
-# - **Tested genes** (team definition) = genes that pass the gene filter and so get a Wald statistic, fold change and p-value. Some get padj = NA (DESeq2's independent filtering removes genes with too few reads to reach padj < 0.05, or a count outlier); they cannot be DEGs but still enter the GSEA ranking (Section 4).
+# - **Pooling 18 + 21 months:** in Lea's original analysis only 16 genes differed between 21 and 18 months (vs 143–149 against 3 months); the heatmap shows them alike.
+# - **Tested genes:** genes passing the filter (they get a Wald statistic). Some get padj = NA (too few reads, DESeq2's independent filtering): not DEGs, but still ranked in GSEA.
 # ====================================================================================================
 
 # Fit one DESeq2 model: samples, design, the tested factor (with the control level first), min_n for the filter
@@ -237,31 +215,26 @@ save_png(p_heat, "heatmap_aging.png", 12, 16)
 iwalk(res, \(r, n) write_csv(r, file.path(OUT, paste0("de_", n, ".csv"))))
 write_csv(deg_summary, file.path(OUT, "deg_summary.csv"))
 
-# **Reading the differential expression**
-# - **Reproducibility check:** DEG counts equal the team reference (aging 175, aDR 118, YMP 50).
-# - **Tested vs with padj:** for aDR, 4,388 of the 17,355 tested genes get padj = NA from independent filtering (low-count genes that could not reach padj < 0.05). They are still in the GSEA ranking.
-# - **Volcano plots:** each point is a gene; right = higher in old / treated mice; higher = more significant; dashed line = padj 0.05. Genes beyond ±5 are drawn at the edge (listed below the plot).
-# - **Aging (138 up, 37 down):** the top genes form a neuroinflammation signature: complement (*C4b, C1qa, C1qb, C1qc*), activated microglia (*Clec7a, Cst7, Trem2, Tyrobp, Cd68, Lgals3, Gpnmb*), MHC class I (*H2-K1, H2-Q6, B2m*), lysosomal cathepsins (*Ctss, Ctsd, Ctsz*) and the astrocyte gene *Gfap*.
-# - **Aging signature by category** (table kept from Lea's original notebook):
+# **Reading**
+# - DEG counts match the team reference: aging 175, aDR 118, YMP 50.
+# - **Volcano:** right = higher in old / treated; dashed line = padj 0.05; genes beyond ±5 drawn at the edge (listed).
+# - **Aging (138 up, 37 down)**, by category (table from Lea's original):
 #
 #   | Category | Genes |
 #   |---|---|
 #   | Activated microglia | *Clec7a, Cst7, Trem2, Tyrobp, Lpl, Gpnmb, Lgals3, Cd68, Lilrb4a* |
 #   | Complement | *C4b, C1qa, C1qb, C1qc* |
-#   | MHC class I / antigen presentation | *H2-K1, H2-Q6, B2m* |
+#   | MHC class I | *H2-K1, H2-Q6, B2m* |
 #   | Lysosomal proteases | *Ctss, Ctsd, Ctsz* |
 #   | Reactive astrocytes | *Gfap* |
-# - **Heatmap:** colour = z-score, i.e. a mouse's value relative to that gene's average over the 11 aging mice (red = above, blue = below). The 4 young mice are below average for all 30 genes; the 18- and 21-month mice look alike, consistent with pooling them.
-# - **aDR (46 up, 72 down):** mostly small fold changes. Top genes include glucocorticoid- and circadian-responsive genes (*Tsc22d3, Hlf, Ciart*) and immediate early genes (*Nr4a2, Nr4a3*), not the aging inflammation genes. *Cdr1* (log2FC +12) has 0 reads in all 4 AL mice and 15–555 in the aDR mice (it is also detected in some PBS / YMP mice): an on/off pattern to interpret with caution.
-# - **YMP (22 up, 28 down):** few genes; several large fold changes rest on 3 vs 3 mice (*Ccn3, Slc47a1, Gm12895*). The most significant gene, *Ptgds*, and *Ogn* and *Slc47a1* are typical of the meninges, so part of this signal may reflect how much meninges was included in each dissection rather than a plasma effect.
+# - **Heatmap** (z-score per gene across the 11 aging mice): young mice are low for all 30 genes; 18 and 21 months look alike.
+# - **aDR (46 up, 72 down):** small changes; glucocorticoid / circadian (*Tsc22d3, Hlf, Ciart*) and immediate early genes (*Nr4a2, Nr4a3*). *Cdr1* is on/off (0 reads in all AL mice): treat with caution.
+# - **YMP (22 up, 28 down):** large fold changes rest on 3 vs 3 mice; top genes *Ptgds, Ogn, Slc47a1* are meningeal, so dissection may contribute.
 
 # ====================================================================================================
-# ## 4 · Pathways: Hallmark GSEA (+ GO BP as supplement)
-# - **What:** for each of the 50 Hallmark gene sets (curated groups of genes for one biological process, e.g. *interferon alpha response*), test whether its genes sit mostly at the top or the bottom of a ranked gene list.
-# - **Why:** many genes changing a little in the same direction can be biologically meaningful even when few are DEGs individually.
-# - **How:** all tested genes ranked by the Wald statistic (one value per gene symbol; for duplicated symbols the strongest is kept); `fgsea` on mouse-native MSigDB Hallmark sets (`db_species = "MM"`), sets of 15–500 genes, seed 42 (fgsea uses random permutations).
-# - **GO Biological Process (supplement):** the same GSEA (same ranking, seed and set sizes) on mouse GO BP terms (M5, GO:BP), written to `output/gsea_gobp.csv`. GO BP is used only to name specific processes behind themes already visible in genes or Hallmark (e.g. myelin, circadian rhythm); Hallmark is the main summary. With thousands of overlapping terms, searching GO BP for new stories would find something by chance.
-# - **How to read:** **NES** (normalised enrichment score) > 0 = the set is higher in old / treated mice, < 0 = lower; significant = padj < 0.05 (Benjamini–Hochberg over the 50 sets).
+# ## 4 · Gene sets (GSEA)
+# - **Method:** all tested genes ranked by the Wald statistic; `fgsea` (sets of 15–500 genes, seed 42). **NES** > 0 = set higher in old / treated mice; significant = padj < 0.05.
+# - **Hallmark** (50 curated sets) is the main result. **GO BP** (~3,700 terms) is a supplementary table, used only to name a process behind a theme already seen (e.g. myelin, circadian), since thousands of overlapping terms will always contain chance hits.
 # ====================================================================================================
 
 # Hallmark GSEA for each comparison: all 50 sets tested; the table counts the significant ones (padj < 0.05)
@@ -332,27 +305,18 @@ gsea %>% filter(comparison != "aging", padj < ALPHA) %>% inner_join(aging_sets, 
             same_sets = paste(nice(pathway[sign(NES) == sign(NES_aging)]), collapse = ", ")) %>%
   arrange(match(intervention, c("aDR", "YMP")))
 
-# **Reading the pathways**
-# - **GSEA result (table above):** of the 50 Hallmark sets tested, **15 are significant in aging** (padj < 0.05), 16 in aDR and 24 in YMP. The other sets show no significant shift.
-# - **Figure:** rows = the **15 sets significant in aging**, i.e. the aging GSEA result, ordered by aging NES; columns = the NES of the same 15 sets in aging, aDR and YMP. Red = higher in old / treated mice, blue = lower. Solid tile with * = padj < 0.05 in that comparison; faded tile = not significant. Sets significant only in an intervention are in `output/gsea_hallmark.csv` (all 50 sets × 3 comparisons).
-# - **Aging (15 of 50 sets significant):** up: interferon α and γ responses, allograft rejection, complement, inflammatory response, coagulation, KRAS signalling; down: oxidative phosphorylation, mTORC1, fatty acid metabolism, MYC targets, TNFα/NF-κB, glycolysis, hypoxia, androgen response.
-# - **aDR (16 of 50):** all 6 aging sets that are also significant in aDR move in the opposite direction (complement, coagulation and KRAS down; oxidative phosphorylation, MYC targets and TNFα/NF-κB up).
-# - **YMP (24 of 50, 22 up):** 9 of the 11 shared sets move opposite to aging (interferon responses down; several metabolic sets up), 2 in the same direction (complement, coagulation). Because almost all YMP sets go up, its 'opposite' calls are mostly the sets that go down with age: partly a general upward shift, not a specific reversal.
-# - **GO BP (supplement, tables above):** 382 / 444 / 309 of ~3,700 terms are significant (aging / aDR / YMP), too many to read one by one, which is why GO BP only names specific processes. Of the terms used on the current slides, these hold: aging: complement activation, antigen presentation, macrophage activation, neuroinflammatory response, synapse pruning up, oxidative phosphorylation down; aDR: circadian rhythm and oxidative phosphorylation up, myelin terms (ensheathment of neurons, myelin assembly, oligodendrocyte differentiation) down; YMP: the same myelin terms up. Not significant: astrocyte activation, sterol biosynthesis, response to starvation, sprouting angiogenesis, response to type I interferon.
-# - **Myelin terms:** not changed with aging, so their opposite shifts after aDR and YMP are not a reversal of aging. They can also reflect how much white matter each tissue punch contained.
-# - **Caution:** gene sets share genes, so these counts are not independent pieces of evidence, and the counting table is descriptive (no test).
+# **Reading**
+# - **Hallmark:** 15 of 50 sets significant in aging (up: interferon, complement, inflammation, allograft rejection, coagulation, KRAS; down: OXPHOS, mTORC1, fatty acid, MYC, TNFα, glycolysis, hypoxia, androgen), 16 in aDR, 24 in YMP (22 up). The figure shows the 15 aging sets; faded = not significant in that comparison.
+# - **Reversed set** (Lea's definition): significant in both, opposite NES. The intervention fold change is treated vs untreated *old* mice, i.e. the intervention's own effect, so reversal means an opposite sign. "Still up but less" cannot be tested: it needs young mice in the intervention cohorts.
+# - **aDR:** all 6 shared aging sets opposite (complement, coagulation, KRAS down; OXPHOS, MYC, TNFα up). **YMP:** 9 of 11 opposite, 2 same (complement, coagulation); since almost all YMP sets go up, this is partly a general shift.
+# - **GO BP terms on the slides:** see the table above (* = significant). Myelin terms go down with aDR and up with YMP but do not change with age, so they are not a reversal; they may also reflect white-matter content of the punch.
+# - Counts are descriptive: gene sets share genes.
 
 # ====================================================================================================
 # ## 5 · Aging vs interventions
-# - **What:** do the genes that change with age change in the opposite direction after aDR or YMP?
-# - **How:**
-#   1. Aging genes = the 175 aging DEGs (padj < 0.05).
-#   2. Keep those with a shrunken fold change in the intervention model.
-#   3. Plot aging log2FC (x) against intervention log2FC (y), one panel per intervention. Upper-left and lower-right quadrants = **opposite** to aging.
-#   4. Describe with **Spearman ρ** (rank correlation; negative = opposite to aging overall, 0 = unrelated), **% opposite sign**, and the **median |log2FC|** (how large the intervention changes are). Genes that are also intervention DEGs are highlighted.
-# - **Relation to Lea's 5a / 5b:** keeps 5b's shrunken fold changes, 5a's scatter, ρ and % opposite, and 5b's rule that a single gene counts only if it is also an intervention DEG. Drops the binomial test (5a), camera and enrichment of the aging sets (5b step 2), the three controls and GO of reversed genes. Reasons in `CHANGES.md`.
-# - **Why only fold changes:** the cohorts are separate experiments (different sequencing runs, sexes and ages), so expression values cannot be compared directly; fold changes within each cohort can.
-# - **No significance test:** aging genes are correlated with each other, not independent, so a p-value for the % opposite (e.g. a binomial test against 50 %) would overstate the evidence. With fold changes near 0, the sign is close to random, so the % opposite must be read together with the median |log2FC|.
+# For the 175 aging DEGs: aging vs intervention shrunken log2FC, one panel per intervention (upper-left / lower-right = opposite to aging). Described by Spearman ρ, % opposite sign and median |log2FC|; genes that are also intervention DEGs are highlighted.
+# - **Only fold changes**, because the cohorts are separate experiments.
+# - **No significance test:** aging genes are correlated, so a binomial or correlation p-value would overstate the evidence. Near-zero fold changes have near-random signs, so read % opposite together with the median |log2FC|.
 # ====================================================================================================
 
 # Compare each intervention with aging over the aging DEGs
@@ -390,56 +354,19 @@ cmp %>% filter(both_DEG) %>% transmute(intervention = panel, symbol, aging = rou
                                        padj_int = signif(padj_int, 2), direction = ifelse(opposite, "opposite", "same")) %>%
   arrange(intervention, direction, desc(abs(aging)))
 
-# **Reading the comparison**
-# - **Size of the changes:** aging DEGs change by a median |log2FC| of 0.70 with age, but by only 0.01 after aDR or YMP (shrunken). For almost all aging genes, neither intervention produces a measurable change. The scatter plots show this as a flat band of points around y = 0.
-# - **aDR:** ρ = 0.13 and 51 % opposite sign, i.e. no opposition. The 5 genes that are DEGs in both all move in the *same* direction as aging (*Fam163b, Etnppl, Cirbp, Rbm3, Hlf*); *Cirbp* and *Rbm3* are cold-inducible genes, possibly reflecting lower body temperature under dietary restriction.
-# - **YMP:** ρ = −0.09 and 62 % opposite sign, but with fold changes this close to 0 the signs are largely noise, so this is at most a weak tendency. Only 2 genes are DEGs in both, both opposite to aging (*Parp4, Hsph1*).
-#
-# **Gene level vs pathway level**
-#
-# | Level | aDR | YMP |
-# |---|---|---|
-# | Individual aging genes (175) | not opposed (ρ = 0.13, 51 % opposite, median change 0.01) | weak tendency at most (ρ = −0.09, 62 % opposite, median change 0.01) |
-# | Aging genes significant in both | 5, all same direction as aging | 2, both opposite |
-# | Hallmark pathways (Section 4) | 6 of 6 shared aging sets opposite | 9 of 11 opposite, within a general upward shift |
-#
-# The two levels answer different questions: pathways summarise small coordinated shifts across many genes (most not aging DEGs), while the gene level asks whether the specific aging genes move back. Opposition at the pathway level does **not** mean the aging genes themselves are reversed.
-#
-# **Possible confounding**
-# - The aging signature comes from a different experiment (other mice, sequencing run, and both sexes) than the interventions (aDR female only, YMP male only, all 19 months old). Sex-specific aging changes and batch differences can therefore weaken or distort the comparison.
-# - Dissection differences (meninges, choroid plexus) change cell-type composition and can mimic or mask expression changes in all three comparisons.
+# **Reading**
+# - Aging DEGs change by a median |log2FC| of 0.70 with age but **0.01** after aDR or YMP: neither intervention measurably moves them (flat band at y = 0).
+# - **aDR:** ρ = 0.13, 51 % opposite (no opposition); the 5 genes significant in both go the *same* way as aging (*Fam163b, Etnppl, Cirbp, Rbm3, Hlf*; *Cirbp*, *Rbm3* are cold-inducible).
+# - **YMP:** ρ = −0.09, 62 % opposite, mostly noise at this effect size; 2 genes significant in both, both opposite (*Parp4, Hsph1*).
+# - **Pathway vs gene level:** both interventions oppose some aging pathways (Section 4), but not the aging genes themselves.
+# - **Confounding:** the aging signature comes from another experiment with both sexes; aDR is female-only and YMP male-only, so batch and sex-specific aging can distort the comparison. Dissection differences can mimic changes in all comparisons.
 
 # ====================================================================================================
 # ## Summary
-# **Main findings**
-# - **Aging** (old vs young): 175 DEGs, mostly up; a neuroinflammation signature (complement, activated microglia, MHC class I, cathepsins, *Gfap*), with interferon and inflammatory pathways up and oxidative phosphorylation, mTORC1 and other metabolic pathways down.
-# - **aDR:** 118 DEGs with small effects (glucocorticoid, circadian, immediate early genes). Pathways: the 6 aging sets also significant in aDR are all opposite to aging. Genes: the aging genes are essentially unchanged (median |log2FC| 0.01; ρ = 0.13).
-# - **YMP:** 50 DEGs, partly meningeal genes. Pathways: 9 of 11 shared aging sets opposite to aging, within a general upward shift. Genes: aging genes essentially unchanged (median |log2FC| 0.01; ρ = −0.09).
-# - **Conclusion:** both interventions shift some aging-related pathways in the opposite direction, but neither reverses the individual aging genes in these data.
-#
-# **Limitations**
-# - 3–5 mice per group: modest power; single-gene fold changes from 3 vs 3 mice are uncertain.
-# - Separate experiments with different sexes and ages: aDR and YMP are each compared with aging only, never with each other; batch and sex-specific effects can distort the comparison.
-# - Bulk tissue: dissection differences can appear as expression changes.
-# - A shrunken log2FC near 0 means little evidence of change, not proof of no change.
-# - The comparison with aging is descriptive; no test of 'rejuvenation' is made.
-#
-# **Methodological decisions**
-#
-# | Decision | Reason |
-# |---|---|
-# | RSEM counts + effective lengths (tximport workflow) | corrects for depth and per-sample gene length |
-# | Exclude SRR21355389 | haemoglobin genes 11–15× above any other aging sample (blood contamination) |
-# | Keep SRR23914572 | choroid plexus genes, not blood (team decision) |
-# | Pool 18 + 21 months, `~ sex + age_bin` | team decision; the sex term removes sex differences from the age test (both sexes in the aging cohort) |
-# | Filter ≥ 10 reads in the smallest-group size; Wald test; padj < 0.05, `alpha = 0.05`; no fold-change cutoff | team setup |
-# | apeglm-shrunken log2FC for plots and comparisons | stable fold changes for low-count genes |
-# | Hallmark GSEA on the Wald statistic | uses all tested genes, not only DEGs |
-# | GO BP as supplement only (same GSEA) | names specific processes (e.g. myelin, circadian); thousands of overlapping terms are not a summary |
-# | No test of the % opposite | aging genes are not independent |
-# | Removed from the original notebook | correlation clustering, expression histograms, 21 vs 18 month analysis, aDR / YMP heatmaps, GO BP figures (GO BP kept as a supplementary table), camera, permutation and binomial tests, alternative aging signatures, cell-type scores, GO of reversed genes (details in `CHANGES.md`) |
-#
-# **Still to decide as a group:** see `HANDOVER.md` (DEG fold-change cutoff on the slides, wording of the myelin results, who presents what).
+# - **Aging:** 175 DEGs; neuroinflammation up (complement, microglia, MHC I, *Gfap*), metabolism down (OXPHOS, mTORC1).
+# - **aDR:** 118 DEGs, small effects; opposes 6 aging pathways, not the aging genes.
+# - **YMP:** 50 DEGs, partly meningeal; opposes 9 of 11 shared aging pathways within a general upward shift, not the aging genes.
+# - **Limitations:** 3–5 mice per group; separate experiments with different sexes and ages; bulk tissue; a near-zero fold change is not proof of no change; the comparison with aging is descriptive.
 # ====================================================================================================
 
 # Software versions (reproducibility)
