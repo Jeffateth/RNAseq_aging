@@ -26,8 +26,13 @@ suppressPackageStartupMessages({
   library(tidyverse)   # loaded last, so dplyr's count/select/filter are not masked
 })
 options(jupyter.rich_display = FALSE, width = 140)
-theme_set(theme_minimal(base_size = 26) + theme(panel.grid.minor = element_blank(), plot.title = element_text(size = rel(1)),
-                                              strip.text = element_text(size = rel(1)), legend.position = "bottom"))
+# Large text and tight margins in every figure
+theme_set(theme_minimal(base_size = 40) +
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(colour = "#333333"), plot.title = element_text(size = rel(1)),
+        strip.text = element_text(size = rel(1)), legend.position = "bottom", legend.margin = margin(0, 0, 0, 0),
+        legend.box.spacing = unit(0.2, "lines"), legend.key.size = unit(2, "lines"), legend.spacing = unit(0.2, "lines"),
+        panel.spacing = unit(1.5, "lines"), plot.margin = margin(2, 6, 2, 2), axis.title = element_text(size = rel(1))))
+LAB <- 12   # text labels inside plots (mm, about 34 pt)
 DATA <- "../../for_teammates"   # shared RSEM tables (in git)
 OUT  <- "output"; dir.create(OUT, showWarnings = FALSE)
 ALPHA <- 0.05                   # DEG and gene set cutoff (padj), also DESeq2's results(alpha = )
@@ -91,13 +96,13 @@ meta %>% count(experiment, group, sex) %>% pivot_wider(names_from = sex, values_
 
 # ====================================================================================================
 # ## 2 · Exploratory analysis
-# - **What:** a PCA of all samples, then one PCA per cohort.
-# - **Why:** to see the main sources of variation (cohort, sex, condition) before any test, and to spot outliers.
+# - **What:** a PCA of all 26 samples.
+# - **Why:** to see the main source of variation before any test, and to spot outliers.
 # - **How:** genes with ≥ 10 reads in ≥ 3 samples; variance-stabilising transformation (`vst`, blind to the groups: log-like values, corrected for depth and gene length, in which low and high counts vary similarly); PCA on the 500 most variable genes.
 # - **How to read:** each point is a mouse; mice close together have similar expression profiles. The % on each axis is the share of variation that axis explains.
 # ====================================================================================================
 
-# VST of all 26 samples, then PCA (top 500 genes); colour = experiment, shape = condition
+# VST of all 26 samples, then PCA (top 500 genes); colour and shape = cohort
 vst_of <- function(srr, min_n = 3) {
   x <- txi; x[c("abundance", "counts", "length")] <- lapply(x[c("abundance", "counts", "length")], \(m) m[, srr])
   d <- suppressMessages(DESeqDataSetFromTximport(x, meta[srr, ], ~ 1))
@@ -109,28 +114,14 @@ pca_df <- function(v) {
 }
 v_all <- vst_of(rownames(meta))
 p <- pca_df(v_all)
-p_all <- ggplot(p$d, aes(PC1, PC2, color = experiment, shape = experiment)) + geom_point(size = 7, alpha = 0.85) +
+p$d$experiment <- factor(p$d$experiment, c("aging", "aDR", "YMP"))
+p_all <- ggplot(p$d, aes(PC1, PC2, color = experiment, shape = experiment)) + geom_point(size = 10, alpha = 0.85) +
   scale_color_manual(values = COL) + labs(x = paste0("PC1 (", p$pv[1], "%)"), y = paste0("PC2 (", p$pv[2], "%)"),
-                                          color = NULL, shape = NULL, title = "All samples")
-options(repr.plot.width = 10, repr.plot.height = 8.5); p_all
-save_png(p_all, "pca_all.png", 10, 8.5)
+                                          color = NULL, shape = NULL) + guides(color = guide_legend(override.aes = list(size = 10)))
+options(repr.plot.width = 10, repr.plot.height = 8); p_all
+save_png(p_all, "pca_all.png", 10, 8)
 
-# PCA within each cohort (each with its own VST and top 500 genes, so axes differ per panel); colour = condition, shape = sex
-pw <- bind_rows(lapply(c("aging", "aDR", "YMP"), \(e) {
-  p <- pca_df(vst_of(rownames(meta)[meta$experiment == e]))
-  mutate(p$d, panel = sprintf("%s: PC1 %d%%, PC2 %d%%", e, p$pv[1], p$pv[2]))
-})) %>% mutate(panel = fct_inorder(panel), condition = droplevels(group))
-p_within <- ggplot(pw, aes(PC1, PC2, color = condition, shape = sex)) + geom_point(size = 6) +
-  scale_color_brewer(palette = "Dark2") + facet_wrap(~ panel, scales = "free") + labs(color = NULL, shape = NULL) +
-  theme(legend.box = "vertical", legend.text = element_text(size = 20)) +
-  guides(color = guide_legend(nrow = 1, override.aes = list(size = 6)), shape = guide_legend(nrow = 1, override.aes = list(size = 6)))
-options(repr.plot.width = 24, repr.plot.height = 9.5); p_within
-save_png(p_within, "pca_within.png", 24, 9.5)
-
-# **Reading the PCA**
-# - **All samples:** PC1 (41 %) separates the aging cohort from the two intervention cohorts, PC2 (13 %) separates aDR from YMP. The largest differences lie between experiments (separate studies, sequencing runs, sexes and ages), so each comparison is analysed within its own cohort only.
-# - **Within the aging cohort:** PC1 (28 %) separates males (triangles) from females (circles) more clearly than it separates ages; this is why the aging model includes a sex term.
-# - **Within aDR and YMP:** treated and control mice partly separate but overlap; with 3–5 mice per group, the treatment effects are modest.
+# **Reading the PCA:** PC1 (41 %) separates the aging cohort from the two intervention cohorts, and PC2 (13 %) separates aDR from YMP. The largest differences lie between experiments (separate studies, sequencing runs, sexes and ages), so each comparison is analysed within its own cohort only.
 
 # ====================================================================================================
 # ## 3 · Differential expression (DESeq2)
@@ -146,7 +137,7 @@ save_png(p_within, "pca_within.png", 24, 9.5)
 # | Fold changes in plots and comparisons | apeglm-shrunken (`lfcShrink`); p-values are not shrunken |
 #
 # - **What DESeq2 does:** normalises for depth and gene length, estimates how much each gene varies between replicate mice (sharing information across genes, which matters with 3–5 mice), then tests each gene with a Wald test (log2FC divided by its standard error).
-# - **Sex term (aging only):** the aging cohort has both sexes, and sex is its main axis of variation (Section 2). The term removes sex differences before the age effect is tested. It assumes the age effect is the same in both sexes. The aDR (female) and YMP (male) cohorts are single-sex, so they need no sex term.
+# - **Sex term (aging only):** the aging cohort has both sexes (2 males + 2 females per age), and sex differs in brain expression. The term removes these differences, so they do not add noise to the age test. It assumes the age effect is the same in both sexes. The aDR (female) and YMP (male) cohorts are single-sex, so they need no sex term.
 # - **Shrunken fold changes (apeglm):** pull noisy fold changes of low-count genes towards 0, so plots and comparisons are not dominated by genes with few reads. They change no p-value and no DEG call.
 # - **Tested genes** (team definition) = genes that pass the gene filter and so get a Wald statistic, fold change and p-value. Some get padj = NA (DESeq2's independent filtering removes genes with too few reads to reach padj < 0.05, or a count outlier); they cannot be DEGs but still enter the GSEA ranking (Section 4).
 # ====================================================================================================
@@ -185,23 +176,24 @@ deg_summary <- imap_dfr(res, \(r, n) tibble(comparison = n, tested = sum(!is.na(
   mutate(reference = c(175, 118, 50))
 deg_summary
 
-# Volcano plots: x = shrunken log2FC, colour = DEG (padj < 0.05) up / down; the 8 most significant DEGs are named.
+# Volcano plots: x = shrunken log2FC, colour = DEG (padj < 0.05) up / down; the 6 most significant DEGs are named.
 # x axis limited to -5..5: the few genes beyond are drawn at the edge (listed below the plot)
 vd <- bind_rows(res, .id = "comparison") %>% filter(!is.na(padj)) %>%   # genes with padj only (y axis)
   mutate(comparison = factor(comparison, names(res)),
          call = case_when(padj < ALPHA & log2FoldChange > 0 ~ "up", padj < ALPHA ~ "down", TRUE ~ "ns"),
          title = paste0(comparison, ": ", ave(call == "up", comparison, FUN = sum), " up, ", ave(call == "down", comparison, FUN = sum), " down"),
          title = fct_reorder(title, as.integer(comparison)))
-top <- vd %>% filter(call != "ns") %>% group_by(comparison) %>% slice_min(padj, n = 8, with_ties = FALSE)
-p_volc <- ggplot(vd, aes(lfc_shrunk, -log10(padj), color = call)) + geom_point(size = 1.5) +
+top <- vd %>% filter(call != "ns") %>% group_by(comparison) %>% slice_min(padj, n = 6, with_ties = FALSE)
+p_volc <- ggplot(vd, aes(lfc_shrunk, -log10(padj), color = call)) + geom_point(size = 2.5) +
   geom_hline(yintercept = -log10(ALPHA), linetype = "dashed", color = "grey50") +
-  geom_text_repel(data = top, aes(label = symbol), color = "black", size = 6, seed = 42, max.overlaps = 30) +
+  geom_text_repel(data = top, aes(label = symbol), color = "black", size = LAB, fontface = "italic", seed = 42, max.overlaps = 30,
+                  box.padding = 0.6, min.segment.length = 0) +
   scale_color_manual(values = COL, breaks = c("up", "down"), labels = c("up", "down")) +
   scale_x_continuous(limits = c(-5, 5), oob = scales::squish) +
   facet_wrap(~ title, scales = "free_y") + labs(x = "log2 fold change (shrunken)", y = "-log10 padj", color = NULL) +
-  guides(color = guide_legend(override.aes = list(size = 6)))
-options(repr.plot.width = 24, repr.plot.height = 9); p_volc
-save_png(p_volc, "volcano.png", 24, 9)
+  guides(color = guide_legend(override.aes = list(size = 9)))
+options(repr.plot.width = 26, repr.plot.height = 10); p_volc
+save_png(p_volc, "volcano.png", 26, 10)
 vd %>% filter(call != "ns", abs(lfc_shrunk) > 5) %>% transmute(comparison, symbol, lfc_shrunk = round(lfc_shrunk, 1), padj = signif(padj, 2))
 
 # Top 10 DEGs per comparison (shrunken log2FC; positive = higher in old / treated mice)
@@ -224,11 +216,11 @@ hd <- as.data.frame(as.table(z)) %>% setNames(c("gene_id", "SRR", "z")) %>%
 p_heat <- ggplot(hd, aes(SRR, gene, fill = z)) + geom_tile(color = "white") +
   scale_fill_gradient2(low = COL[["down"]], mid = "#f4f4f4", high = COL[["up"]], limits = c(-2.5, 2.5)) +
   scale_x_discrete(labels = setNames(as.character(hd$mouse), hd$SRR)) +
-  labs(x = NULL, y = NULL, fill = "z-score", title = "Top 30 aging DEGs") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 20), axis.text.y = element_text(face = "italic", size = 18),
-        panel.grid = element_blank(), legend.position = "right", legend.key.height = unit(2.5, "lines"))
-options(repr.plot.width = 11, repr.plot.height = 13); p_heat
-save_png(p_heat, "heatmap_aging.png", 11, 13)
+  scale_y_discrete(expand = c(0, 0)) + labs(x = NULL, y = NULL, fill = "z") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = rel(0.8)), axis.text.y = element_text(face = "italic", size = rel(0.7)),
+        panel.grid = element_blank(), legend.position = "right", legend.key.height = unit(4, "lines"))
+options(repr.plot.width = 12, repr.plot.height = 16); p_heat
+save_png(p_heat, "heatmap_aging.png", 12, 16)
 
 # Save the three DE tables (all tested genes; padj NA = removed by independent filtering or a count outlier)
 iwalk(res, \(r, n) write_csv(r, file.path(OUT, paste0("de_", n, ".csv"))))
@@ -267,22 +259,26 @@ write_csv(gsea, file.path(OUT, "gsea_hallmark.csv"))
 gsea %>% group_by(comparison = factor(comparison, names(res))) %>%
   summarise(significant = sum(padj < ALPHA), up = sum(padj < ALPHA & NES > 0), down = sum(padj < ALPHA & NES < 0))
 
-# One figure: NES of every Hallmark set significant in at least one comparison (* = padj < 0.05), ordered by aging NES
+# One figure: the 15 Hallmark sets significant in aging (rows, ordered by aging NES), with their NES in aging, aDR and YMP.
+# Colour = NES (red = higher in old / treated mice, blue = lower); solid tile with * = padj < 0.05; faded tile = not significant
 nice <- \(p) str_to_sentence(gsub("_", " ", sub("^HALLMARK_", "", p))) %>%
   str_replace_all(c("^Tnfa signaling via nfkb" = "TNFa signaling via NF-kB", "^Il6 jak stat3" = "IL6-JAK-STAT3", "^Il2 stat5" = "IL2-STAT5",
                     "^Mtorc1" = "mTORC1", "^Myc" = "MYC", "^E2f" = "E2F", "^G2m" = "G2M", "^Kras" = "KRAS", "^P53" = "p53", "^Uv" = "UV",
                     "^Tgf beta" = "TGF-beta", "^Pi3k akt mtor" = "PI3K-AKT-mTOR", "^Dna" = "DNA", "^Wnt beta catenin" = "WNT-beta-catenin"))
-keep <- unique(gsea$pathway[gsea$padj < ALPHA])
-ord  <- gsea %>% filter(comparison == "aging") %>% arrange(NES) %>% pull(pathway)
-gd <- gsea %>% filter(pathway %in% keep) %>%
-  mutate(set = factor(nice(pathway), nice(ord[ord %in% keep])), comparison = factor(comparison, names(res)))
-p_gsea <- ggplot(gd, aes(comparison, set, fill = NES)) + geom_tile(color = "white", linewidth = 1) +
-  geom_text(aes(label = ifelse(padj < ALPHA, "*", "")), size = 12, vjust = 0.75) +
-  scale_fill_gradient2(low = COL[["down"]], mid = "#f4f4f4", high = COL[["up"]]) + scale_x_discrete(position = "top") +
-  labs(x = NULL, y = NULL, title = "Hallmark gene sets (* padj < 0.05)") +
-  theme(panel.grid = element_blank(), legend.position = "right", legend.key.height = unit(2.5, "lines"), axis.text.y = element_text(size = 20))
-options(repr.plot.width = 13, repr.plot.height = 15); p_gsea
-save_png(p_gsea, "gsea_hallmark.png", 13, 15)
+ord <- gsea %>% filter(comparison == "aging", padj < ALPHA) %>% arrange(NES) %>% pull(pathway)
+gd <- gsea %>% filter(pathway %in% ord) %>%
+  mutate(set = factor(nice(pathway), nice(ord)), comparison = factor(comparison, names(res)),
+         sig = factor(ifelse(padj < ALPHA, "padj < 0.05", "not significant"), c("padj < 0.05", "not significant")))
+lim <- max(abs(gd$NES))
+p_gsea <- ggplot(gd, aes(comparison, set, fill = NES, alpha = sig)) + geom_tile(color = "white", linewidth = 1.5) +
+  geom_text(aes(label = ifelse(padj < ALPHA, "*", "")), size = 18, vjust = 0.75, alpha = 1) +
+  scale_fill_gradient2(low = COL[["down"]], mid = "#f4f4f4", high = COL[["up"]], limits = c(-lim, lim)) +
+  scale_alpha_manual(values = c("padj < 0.05" = 1, "not significant" = 0.3), name = NULL) +
+  scale_x_discrete(position = "top", expand = c(0, 0)) + scale_y_discrete(expand = c(0, 0)) + labs(x = NULL, y = NULL) +
+  theme(panel.grid = element_blank(), legend.position = "right", legend.key.height = unit(3, "lines")) +
+  guides(alpha = guide_legend(override.aes = list(fill = COL[["up"]])), fill = guide_colorbar(order = 1))
+options(repr.plot.width = 17, repr.plot.height = 12); p_gsea
+save_png(p_gsea, "gsea_hallmark.png", 17, 12)
 
 # Descriptive count: of the 15 aging sets, how many are also significant in each intervention, in the opposite or the same direction
 aging_sets <- gsea %>% filter(comparison == "aging", padj < ALPHA) %>% select(pathway, NES_aging = NES)
@@ -295,7 +291,7 @@ gsea %>% filter(comparison != "aging", padj < ALPHA) %>% inner_join(aging_sets, 
   arrange(match(intervention, c("aDR", "YMP")))
 
 # **Reading the pathways**
-# - **Figure:** rows = Hallmark sets significant in at least one comparison, ordered by the aging NES; red = higher in old / treated mice, blue = lower; * = padj < 0.05.
+# - **Figure:** rows = the 15 Hallmark sets significant in aging, ordered by the aging NES; columns = their NES in aging, aDR and YMP. Red = higher in old / treated mice, blue = lower. Solid tile with * = padj < 0.05; faded tile = not significant. Sets significant only in an intervention are in `output/gsea_hallmark.csv` (all 50 sets × 3 comparisons).
 # - **Aging (15 sets):** up: interferon α and γ responses, allograft rejection, complement, inflammatory response, coagulation, KRAS signalling; down: oxidative phosphorylation, mTORC1, fatty acid metabolism, MYC targets, TNFα/NF-κB, glycolysis, hypoxia, androgen response.
 # - **aDR (16 sets):** all 6 aging sets that are also significant in aDR move in the opposite direction (complement, coagulation and KRAS down; oxidative phosphorylation, MYC targets and TNFα/NF-κB up).
 # - **YMP (24 sets, 22 up):** 9 of the 11 shared sets move opposite to aging (interferon responses down; several metabolic sets up), 2 in the same direction (complement, coagulation). Because almost all YMP sets go up, its 'opposite' calls are mostly the sets that go down with age: partly a general upward shift, not a specific reversal.
@@ -333,14 +329,15 @@ ttl <- with(vs_aging, setNames(sprintf("%s: rho = %.2f, %.0f%% opposite", interv
 cmp$title <- factor(ttl[cmp$panel], ttl[c("aDR", "YMP")])
 p_vs <- ggplot(cmp, aes(aging, lfc_int)) +
   geom_hline(yintercept = 0, color = "grey60") + geom_vline(xintercept = 0, color = "grey60") +
-  geom_point(data = filter(cmp, !both_DEG), color = "grey70", size = 3) +
-  geom_point(data = filter(cmp, both_DEG), aes(color = ifelse(opposite, "opposite to aging", "same as aging")), size = 6) +
-  geom_text_repel(data = filter(cmp, both_DEG), aes(label = symbol), size = 6, seed = 42, max.overlaps = 50, fontface = "italic") +
+  geom_point(data = filter(cmp, !both_DEG), color = "grey70", size = 4) +
+  geom_point(data = filter(cmp, both_DEG), aes(color = ifelse(opposite, "opposite to aging", "same as aging")), size = 9) +
+  geom_text_repel(data = filter(cmp, both_DEG), aes(label = symbol), size = LAB, seed = 42, max.overlaps = 50, fontface = "italic",
+                  box.padding = 0.8, min.segment.length = 0) +
   scale_color_manual(values = c("opposite to aging" = "#1baf7a", "same as aging" = "#a35bd6")) +
-  facet_wrap(~ title) + labs(x = "log2FC aging (old vs young, shrunken)", y = "log2FC intervention (shrunken)", color = "DEG in both:") +
-  guides(color = guide_legend(override.aes = list(size = 6)))
-options(repr.plot.width = 20, repr.plot.height = 9.5); p_vs
-save_png(p_vs, "intervention_vs_aging.png", 20, 9.5)
+  facet_wrap(~ title) + labs(x = "log2FC aging (shrunken)", y = "log2FC intervention", color = "DEG in both:") +
+  guides(color = guide_legend(override.aes = list(size = 9)))
+options(repr.plot.width = 22, repr.plot.height = 10); p_vs
+save_png(p_vs, "intervention_vs_aging.png", 22, 10)
 
 # Genes that are DEGs in aging and in an intervention
 cmp %>% filter(both_DEG) %>% transmute(intervention = panel, symbol, aging = round(aging, 2), intervention_lfc = round(lfc_int, 2),
@@ -388,7 +385,7 @@ cmp %>% filter(both_DEG) %>% transmute(intervention = panel, symbol, aging = rou
 # | RSEM counts + effective lengths (tximport workflow) | corrects for depth and per-sample gene length |
 # | Exclude SRR21355389 | haemoglobin genes 11–15× above any other aging sample (blood contamination) |
 # | Keep SRR23914572 | choroid plexus genes, not blood (team decision) |
-# | Pool 18 + 21 months, `~ sex + age_bin` | team decision; sex is the main axis of variation in the aging cohort |
+# | Pool 18 + 21 months, `~ sex + age_bin` | team decision; the sex term removes sex differences from the age test (both sexes in the aging cohort) |
 # | Filter ≥ 10 reads in the smallest-group size; Wald test; padj < 0.05, `alpha = 0.05`; no fold-change cutoff | team setup |
 # | apeglm-shrunken log2FC for plots and comparisons | stable fold changes for low-count genes |
 # | Hallmark GSEA on the Wald statistic | uses all tested genes, not only DEGs |

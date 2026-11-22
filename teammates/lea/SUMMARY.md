@@ -27,7 +27,7 @@ Refactored version of Lea's notebook (`Script.ipynb`), run with the team's commo
 | RSEM expected counts + effective lengths, `DESeqDataSetFromTximport` | corrects for gene-length differences between samples |
 | Exclude SRR21355389 | haemoglobin genes 11–15× above every other aging sample (blood contamination) |
 | Keep SRR23914572 | choroid plexus genes, not blood (team decision) |
-| Aging: 18 + 21 months pooled, `~ sex + age_bin`; aDR, YMP: `~ condition` | team setup; sex is the main axis of variation within the aging cohort |
+| Aging: 18 + 21 months pooled, `~ sex + age_bin`; aDR, YMP: `~ condition` | team setup; the sex term removes sex differences from the age test (both sexes in the aging cohort; aDR and YMP are single-sex) |
 | ≥ 10 reads in the smallest-group size (4 / 4 / 3); Wald; `alpha = 0.05`; DEG = padj < 0.05, no fold-change cutoff | team setup |
 | apeglm-shrunken log2FC for plots and comparisons | stable fold changes for low-count genes |
 | Mouse MSigDB Hallmark (release 2026.1), fgsea on the Wald statistic, seed 42 | all tested genes ranked, not only DEGs |
@@ -40,6 +40,6 @@ Removed from the original notebook: correlation clustering, expression histogram
 |---|---|
 | `de_aging.csv`, `de_aDR.csv`, `de_YMP.csv` | all tested genes: `log2FoldChange`, `lfc_shrunk`, `stat`, `pvalue`, `padj` |
 | `deg_summary.csv` | tested genes, DEGs (up / down) per comparison, with the reference counts |
-| `gsea_hallmark.csv` | Hallmark GSEA per comparison: `NES`, `pval`, `padj`, `size` |
+| `gsea_hallmark.csv` | Hallmark GSEA, all 50 sets × 3 comparisons: `NES`, `pval`, `padj`, `size` |
 | `intervention_vs_aging.csv` | per intervention: Spearman ρ, % opposite, median |log2FC| (aging, intervention), DEGs in both (opposite / same) |
-| `pca_all.png`, `pca_within.png`, `volcano.png`, `heatmap_aging.png`, `gsea_hallmark.png`, `intervention_vs_aging.png` | figures |
+| `pca_all.png`, `volcano.png`, `heatmap_aging.png`, `gsea_hallmark.png` (the 15 aging sets), `intervention_vs_aging.png` | figures |
