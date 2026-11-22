@@ -243,7 +243,7 @@ write_csv(deg_summary, file.path(OUT, "deg_summary.csv"))
 # - **How to read:** **NES** (normalised enrichment score) > 0 = the set is higher in old / treated mice, < 0 = lower; significant = padj < 0.05 (Benjamini–Hochberg over the 50 sets).
 # ====================================================================================================
 
-# Hallmark GSEA for each comparison
+# Hallmark GSEA for each comparison: all 50 sets tested; the table counts the significant ones (padj < 0.05)
 hallmark <- msigdbr(species = "Mus musculus", db_species = "MM", collection = "MH")
 hallmark <- split(hallmark$gene_symbol, hallmark$gs_name)
 cat("msigdbr", as.character(packageVersion("msigdbr")), "|", length(hallmark), "Hallmark sets\n")
@@ -259,7 +259,8 @@ write_csv(gsea, file.path(OUT, "gsea_hallmark.csv"))
 gsea %>% group_by(comparison = factor(comparison, names(res))) %>%
   summarise(significant = sum(padj < ALPHA), up = sum(padj < ALPHA & NES > 0), down = sum(padj < ALPHA & NES < 0))
 
-# One figure: the 15 Hallmark sets significant in aging (rows, ordered by aging NES), with their NES in aging, aDR and YMP.
+# One figure: the Hallmark sets that the aging GSEA found significant (padj < 0.05; 15 of 50), ordered by aging NES,
+# with the NES of the same sets in aging, aDR and YMP.
 # Colour = NES (red = higher in old / treated mice, blue = lower); solid tile with * = padj < 0.05; faded tile = not significant
 nice <- \(p) str_to_sentence(gsub("_", " ", sub("^HALLMARK_", "", p))) %>%
   str_replace_all(c("^Tnfa signaling via nfkb" = "TNFa signaling via NF-kB", "^Il6 jak stat3" = "IL6-JAK-STAT3", "^Il2 stat5" = "IL2-STAT5",
@@ -291,10 +292,11 @@ gsea %>% filter(comparison != "aging", padj < ALPHA) %>% inner_join(aging_sets, 
   arrange(match(intervention, c("aDR", "YMP")))
 
 # **Reading the pathways**
-# - **Figure:** rows = the 15 Hallmark sets significant in aging, ordered by the aging NES; columns = their NES in aging, aDR and YMP. Red = higher in old / treated mice, blue = lower. Solid tile with * = padj < 0.05; faded tile = not significant. Sets significant only in an intervention are in `output/gsea_hallmark.csv` (all 50 sets × 3 comparisons).
-# - **Aging (15 sets):** up: interferon α and γ responses, allograft rejection, complement, inflammatory response, coagulation, KRAS signalling; down: oxidative phosphorylation, mTORC1, fatty acid metabolism, MYC targets, TNFα/NF-κB, glycolysis, hypoxia, androgen response.
-# - **aDR (16 sets):** all 6 aging sets that are also significant in aDR move in the opposite direction (complement, coagulation and KRAS down; oxidative phosphorylation, MYC targets and TNFα/NF-κB up).
-# - **YMP (24 sets, 22 up):** 9 of the 11 shared sets move opposite to aging (interferon responses down; several metabolic sets up), 2 in the same direction (complement, coagulation). Because almost all YMP sets go up, its 'opposite' calls are mostly the sets that go down with age: partly a general upward shift, not a specific reversal.
+# - **GSEA result (table above):** of the 50 Hallmark sets tested, **15 are significant in aging** (padj < 0.05), 16 in aDR and 24 in YMP. The other sets show no significant shift.
+# - **Figure:** rows = the **15 sets significant in aging**, i.e. the aging GSEA result, ordered by aging NES; columns = the NES of the same 15 sets in aging, aDR and YMP. Red = higher in old / treated mice, blue = lower. Solid tile with * = padj < 0.05 in that comparison; faded tile = not significant. Sets significant only in an intervention are in `output/gsea_hallmark.csv` (all 50 sets × 3 comparisons).
+# - **Aging (15 of 50 sets significant):** up: interferon α and γ responses, allograft rejection, complement, inflammatory response, coagulation, KRAS signalling; down: oxidative phosphorylation, mTORC1, fatty acid metabolism, MYC targets, TNFα/NF-κB, glycolysis, hypoxia, androgen response.
+# - **aDR (16 of 50):** all 6 aging sets that are also significant in aDR move in the opposite direction (complement, coagulation and KRAS down; oxidative phosphorylation, MYC targets and TNFα/NF-κB up).
+# - **YMP (24 of 50, 22 up):** 9 of the 11 shared sets move opposite to aging (interferon responses down; several metabolic sets up), 2 in the same direction (complement, coagulation). Because almost all YMP sets go up, its 'opposite' calls are mostly the sets that go down with age: partly a general upward shift, not a specific reversal.
 # - **Caution:** gene sets share genes, so these counts are not independent pieces of evidence, and the counting table is descriptive (no test).
 
 # ====================================================================================================

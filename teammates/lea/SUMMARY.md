@@ -3,7 +3,7 @@
 Refactored version of Lea's notebook (`Script.ipynb`), run with the team's common DESeq2 setup (agreed 20 November 2026). All numbers below come from `output/`.
 
 ## Main findings
-| Comparison | DEGs (up / down) | Hallmark sets (padj < 0.05) | vs aging: genes (175 aging DEGs; median |log2FC| with age 0.70) | vs aging: pathways (15 aging sets) |
+| Comparison | DEGs (up / down) | Hallmark sets significant in GSEA (of 50; padj < 0.05) | vs aging: genes (175 aging DEGs; median |log2FC| with age 0.70) | vs aging: pathways (the 15 sets significant in aging) |
 |---|---|---|---|---|
 | Aging, old (18 + 21 mo) vs young (3 mo) | 175 (138 / 37) | 15 | – | – |
 | aDR vs AL | 118 (46 / 72) | 16 | median |log2FC| 0.01; ρ = 0.13, 51 % opposite; 5 DEGs in both, all same direction as aging | 6 significant in both, all opposite |
