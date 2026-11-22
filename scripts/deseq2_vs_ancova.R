@@ -18,7 +18,7 @@ ancova <- function(age) {
 }
 
 # Real labels
-a <- ancova(cd$age_class); r <- results(d, contrast = c("age_class", "old", "young"))
+a <- ancova(cd$age_class); r <- results(d, contrast = c("age_class", "old", "young"), alpha = 0.05)   # alpha = DEG cutoff (team setup)
 deg_d <- which(r$padj < 0.05); deg_a <- which(a$padj < 0.05)
 
 # One plot: aging DEGs per method, split into genes found by both and by one method only
