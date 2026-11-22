@@ -17,7 +17,7 @@ Original: Lea's `Script.ipynb` at commit `8a133ad` of her repository (copy in th
 | Exclusion of SRR21355389 with the haemoglobin table | same genes; table now also shows fold vs the other aging samples |
 | Within-cohort comparisons, pooled 18 + 21 months | unchanged |
 | Wald test, `alpha = 0.05`, DEG = padj < 0.05 | unchanged |
-| GSEA: mouse-native MSigDB Hallmark, fgsea on the Wald statistic, sets 15–500, seed 42 | identical to Lea's setup |
+| GSEA: mouse-native MSigDB Hallmark and GO BP, fgsea on the Wald statistic, sets 15–500, seed 42 | identical to Lea's setup; GO BP now a supplementary table, not figures |
 | apeglm-shrunken fold changes (from 5b step 1) | now also used in the volcano plots |
 | 5b's definition of a reversed pathway (significant in both, opposite NES sign) | used for the pathway count in Section 4 |
 | 5b's rule that a gene counts as reversed only if it is also an intervention DEG | used to highlight genes in the Section 5 scatter |
@@ -40,7 +40,7 @@ Original: Lea's `Script.ipynb` at commit `8a133ad` of her repository (copy in th
 | Expression histograms, Pearson / Spearman clustering trees | the PCA shows the same structure; not needed for the research question |
 | Per-cohort PCA | the sex term is explained in one sentence instead |
 | Heatmaps for aDR and YMP, 21 vs 18 volcano | one aging heatmap is enough; 21 vs 18 reduced to the pooling sentence |
-| GO BP GSEA and GO bar plots | Hallmark's 50 sets are easier to explain; open decision whether to add GO BP back as a supplementary table |
+| GO BP bar plots | Hallmark's 50 sets are the main figure; GO BP GSEA itself is kept as a supplementary table (`output/gsea_gobp.csv`) |
 | 5a binomial test and correlation p-values | aging genes are not independent, so the p-values are too small (Lea's own note in 5a) |
 | 5a GO enrichment of reversed genes | wrong background (Lea's own note); not needed |
 | 5b step 2: camera and GSEA of the aging_up / aging_down sets | valid, but an extra method to justify; the scatter, ρ and % opposite answer the same question descriptively |

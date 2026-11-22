@@ -13,7 +13,7 @@
 | Gene filter | ≥ 10 reads in at least the smallest-group size (4 / 4 / 3) |
 | Test and DEG | Wald test, `results(alpha = 0.05)`, DEG = padj < 0.05, no fold-change cutoff |
 | Fold changes in plots and comparisons | apeglm-shrunken |
-| Gene sets | mouse MSigDB Hallmark, fgsea on the Wald statistic (all tested genes), sizes 15–500, seed 42 |
+| Gene sets | mouse MSigDB Hallmark (main) and GO BP (supplementary table), fgsea on the Wald statistic (all tested genes), sizes 15–500, seed 42 |
 | Aging vs intervention | the 175 aging DEGs: scatter of shrunken log2FC, Spearman ρ, % opposite sign, median \|log2FC\|; descriptive, no test |
 
 **On Lea's question ("are these 3 comparisons relevant and the tests right?"):** yes for the three comparisons (aging, aDR vs AL, YMP vs PBS, each within its cohort). Tests: the Wald test for genes and fgsea for gene sets are the only tests. The aging-vs-intervention comparison uses descriptive numbers only, because aging genes are correlated, so a binomial or correlation p-value would overstate the evidence.
@@ -23,6 +23,7 @@
 |---|---|---|---|
 | DEGs (up / down) | 175 (138 / 37) | 118 (46 / 72) | 50 (22 / 28) |
 | Hallmark sets significant (of 50) | 15 | 16 | 24 (22 up) |
+| GO BP terms significant (of ~3,700) | 382 | 444 | 309 |
 | The 15 aging sets, also significant in the intervention | – | 6, all opposite to aging | 11: 9 opposite, 2 same |
 | Aging DEGs: median \|shrunken log2FC\| | 0.70 (with age) | 0.01 | 0.01 |
 | Aging DEGs: Spearman ρ / % opposite sign | – | 0.13 / 51 % | −0.09 / 62 % |
@@ -42,7 +43,7 @@
 | `gsea_hallmark.png` | the 15 Hallmark sets significant in aging, NES in aging / aDR / YMP; non-significant tiles faded |
 | `intervention_vs_aging.png` | aging vs intervention log2FC for the 175 aging DEGs; genes significant in both highlighted |
 
-Tables: `de_aging.csv`, `de_aDR.csv`, `de_YMP.csv` (all tested genes; for importing DEG lists), `deg_summary.csv`, `gsea_hallmark.csv` (all 50 sets × 3), `intervention_vs_aging.csv`.
+Tables: `de_aging.csv`, `de_aDR.csv`, `de_YMP.csv` (all tested genes; for importing DEG lists), `deg_summary.csv`, `gsea_hallmark.csv` (all 50 sets × 3), `gsea_gobp.csv` (all GO BP terms × 3), `intervention_vs_aging.csv`. The notebook also lists the GO terms used on the current slides with their NES per comparison (Section 4).
 
 ## Limitations
 - 3–5 mice per group; single-gene fold changes from 3 vs 3 mice are uncertain.
@@ -54,7 +55,6 @@ Tables: `de_aging.csv`, `de_aDR.csv`, `de_YMP.csv` (all tested genes; for import
 | Decision | Options | Suggestion |
 |---|---|---|
 | Use this notebook's outputs as the common source for DEG lists and gene sets? | yes / adapt / another notebook | yes, after Lea's and Nick's review |
-| GO BP | drop, or add as a supplementary table with the same ranking and seed | supplementary table only; Hallmark stays the main figure |
 | DEG definition on the slides | agreed (no fold-change cutoff) or label a 1.5-fold subset explicitly | use the agreed counts everywhere |
 | Myelin / oligodendrocyte gene sets (GO BP) | include or not | if included, say "myelin-related genes higher / lower", not "more myelin"; not changed with aging here |
 | 16 h fasting before sacrifice (aDR slide) | cite the paper's methods, or remove | needs a source |
@@ -71,4 +71,4 @@ Tables: `de_aging.csv`, `de_aDR.csv`, `de_YMP.csv` (all tested genes; for import
 | 7 Diet restriction | 53 DEGs (16 / 37); fasting; starvation, angiogenesis | 118 (46 / 72); circadian, OXPHOS, myelin terms hold; response to starvation (0.2), angiogenesis (0.05), sprouting angiogenesis (0.2) not significant; fasting needs a source |
 | 8 Young plasma | 42 DEGs (15 / 27); "more myelin" | 50 (22 / 28); interferon down and metabolism up hold; response to type I interferon (0.09) and EMT (0.3) not significant; "higher myelin-related genes" |
 
-Values for the check come from `../../results/common/` (same setup; GO BP computed there with the same ranking and seed).
+Values for the check come from `output/gsea_hallmark.csv` and `output/gsea_gobp.csv`. **GO BP** is included as a supplementary table (same GSEA as Hallmark): a GO term goes on a slide only if padj < 0.05 there, with its exact name, and only to name a process behind a theme already seen in genes or Hallmark.

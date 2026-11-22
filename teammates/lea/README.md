@@ -7,6 +7,6 @@
 | `HANDOVER.md` | start here: agreed setup, results, figures, limitations, open decisions, presentation check |
 | `CHANGES.md` | what was retained, changed or removed from Lea's original, and why |
 | `Script.ipynb` / `Script.R` | the notebook / the same as a plain R script |
-| `output/` | DE tables, Hallmark results, comparison table, five figures |
+| `output/` | DE tables, Hallmark and GO BP results, comparison table, five figures |
 
 Run from this folder with the repo's pixi environment: `pixi run jupyter nbconvert --to notebook --execute --inplace Script.ipynb`. The original notebook is in git history (commits `9e240d7`, `9d815b9`).

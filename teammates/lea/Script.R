@@ -26,7 +26,7 @@
 # | 1 Data import, sample exclusion | 1 (same exclusion and haemoglobin check) |
 # | 2 Sample overview (clustering, PCA) | 2 (PCA only) |
 # | 3 DESeq2, volcano plots, heatmaps | 3 (agreed setup; one heatmap) |
-# | 4 GSEA (Hallmark + GO BP) | 4 (Hallmark; same ranking and seed as Lea's) |
+# | 4 GSEA (Hallmark + GO BP) | 4 (Hallmark main figure, GO BP as table; same ranking and seed as Lea's) |
 # | 5a / 5b aging vs interventions | 5 (5b's shrunken fold changes and pathway definition, without the extra tests) |
 # ====================================================================================================
 
@@ -256,10 +256,11 @@ write_csv(deg_summary, file.path(OUT, "deg_summary.csv"))
 # - **YMP (22 up, 28 down):** few genes; several large fold changes rest on 3 vs 3 mice (*Ccn3, Slc47a1, Gm12895*). The most significant gene, *Ptgds*, and *Ogn* and *Slc47a1* are typical of the meninges, so part of this signal may reflect how much meninges was included in each dissection rather than a plasma effect.
 
 # ====================================================================================================
-# ## 4 · Pathways: Hallmark GSEA
+# ## 4 · Pathways: Hallmark GSEA (+ GO BP as supplement)
 # - **What:** for each of the 50 Hallmark gene sets (curated groups of genes for one biological process, e.g. *interferon alpha response*), test whether its genes sit mostly at the top or the bottom of a ranked gene list.
 # - **Why:** many genes changing a little in the same direction can be biologically meaningful even when few are DEGs individually.
 # - **How:** all tested genes ranked by the Wald statistic (one value per gene symbol; for duplicated symbols the strongest is kept); `fgsea` on mouse-native MSigDB Hallmark sets (`db_species = "MM"`), sets of 15–500 genes, seed 42 (fgsea uses random permutations).
+# - **GO Biological Process (supplement):** the same GSEA (same ranking, seed and set sizes) on mouse GO BP terms (M5, GO:BP), written to `output/gsea_gobp.csv`. GO BP is used only to name specific processes behind themes already visible in genes or Hallmark (e.g. myelin, circadian rhythm); Hallmark is the main summary. With thousands of overlapping terms, searching GO BP for new stories would find something by chance.
 # - **How to read:** **NES** (normalised enrichment score) > 0 = the set is higher in old / treated mice, < 0 = lower; significant = padj < 0.05 (Benjamini–Hochberg over the 50 sets).
 # ====================================================================================================
 
@@ -267,17 +268,37 @@ write_csv(deg_summary, file.path(OUT, "deg_summary.csv"))
 hallmark <- msigdbr(species = "Mus musculus", db_species = "MM", collection = "MH")
 hallmark <- split(hallmark$gene_symbol, hallmark$gs_name)
 cat("msigdbr", as.character(packageVersion("msigdbr")), "|", length(hallmark), "Hallmark sets\n")
-run_gsea <- function(r) {
+run_gsea <- function(r, sets = hallmark) {
   r <- r %>% filter(!is.na(stat), !is.na(symbol), symbol != "") %>% group_by(symbol) %>%
     slice_max(abs(stat), n = 1, with_ties = FALSE) %>% ungroup()
   set.seed(42)
-  suppressWarnings(fgsea(hallmark, setNames(r$stat, r$symbol), minSize = 15, maxSize = 500)) %>%
+  suppressWarnings(fgsea(sets, setNames(r$stat, r$symbol), minSize = 15, maxSize = 500)) %>%
     as_tibble() %>% select(pathway, NES, pval, padj, size) %>% arrange(padj)
 }
 gsea <- bind_rows(lapply(res, run_gsea), .id = "comparison")
 write_csv(gsea, file.path(OUT, "gsea_hallmark.csv"))
 gsea %>% group_by(comparison = factor(comparison, names(res))) %>%
   summarise(significant = sum(padj < ALPHA), up = sum(padj < ALPHA & NES > 0), down = sum(padj < ALPHA & NES < 0))
+
+# Supplement: GO BP GSEA, same ranking (Wald statistic), seed 42 and set sizes as Hallmark; all terms saved
+gobp <- msigdbr(species = "Mus musculus", db_species = "MM", collection = "M5", subcollection = "GO:BP")
+gobp <- split(gobp$gene_symbol, gobp$gs_name)
+gsea_go <- bind_rows(lapply(res, run_gsea, sets = gobp), .id = "comparison")
+write_csv(gsea_go, file.path(OUT, "gsea_gobp.csv"))
+gsea_go %>% group_by(comparison = factor(comparison, names(res))) %>%
+  summarise(tested = n(), significant = sum(padj < ALPHA), up = sum(padj < ALPHA & NES > 0), down = sum(padj < ALPHA & NES < 0))
+
+# GO BP terms used on the current slides: NES per comparison (* = padj < 0.05). One place to take slide values from
+slide_terms <- c("GOBP_COMPLEMENT_ACTIVATION", "GOBP_ANTIGEN_PROCESSING_AND_PRESENTATION", "GOBP_MACROPHAGE_ACTIVATION",
+                 "GOBP_NEUROINFLAMMATORY_RESPONSE", "GOBP_SYNAPSE_PRUNING", "GOBP_ASTROCYTE_ACTIVATION",
+                 "GOBP_OXIDATIVE_PHOSPHORYLATION", "GOBP_STEROL_BIOSYNTHETIC_PROCESS", "GOBP_CIRCADIAN_RHYTHM",
+                 "GOBP_RESPONSE_TO_STARVATION", "GOBP_SPROUTING_ANGIOGENESIS", "GOBP_RESPONSE_TO_TYPE_I_INTERFERON",
+                 "GOBP_ENSHEATHMENT_OF_NEURONS", "GOBP_MYELIN_ASSEMBLY", "GOBP_OLIGODENDROCYTE_DIFFERENTIATION")
+gsea_go %>% filter(pathway %in% slide_terms) %>%
+  mutate(value = sprintf("%+.2f%s", NES, ifelse(padj < ALPHA, "*", "")),
+         term = tolower(gsub("_", " ", sub("^GOBP_", "", pathway)))) %>%
+  select(term, comparison, value) %>% pivot_wider(names_from = comparison, values_from = value) %>%
+  select(term, aging, aDR, YMP) %>% arrange(match(term, tolower(gsub("_", " ", sub("^GOBP_", "", slide_terms)))))
 
 # One figure: the Hallmark sets that the aging GSEA found significant (padj < 0.05; 15 of 50), ordered by aging NES,
 # with the NES of the same sets in aging, aDR and YMP.
@@ -317,6 +338,8 @@ gsea %>% filter(comparison != "aging", padj < ALPHA) %>% inner_join(aging_sets, 
 # - **Aging (15 of 50 sets significant):** up: interferon α and γ responses, allograft rejection, complement, inflammatory response, coagulation, KRAS signalling; down: oxidative phosphorylation, mTORC1, fatty acid metabolism, MYC targets, TNFα/NF-κB, glycolysis, hypoxia, androgen response.
 # - **aDR (16 of 50):** all 6 aging sets that are also significant in aDR move in the opposite direction (complement, coagulation and KRAS down; oxidative phosphorylation, MYC targets and TNFα/NF-κB up).
 # - **YMP (24 of 50, 22 up):** 9 of the 11 shared sets move opposite to aging (interferon responses down; several metabolic sets up), 2 in the same direction (complement, coagulation). Because almost all YMP sets go up, its 'opposite' calls are mostly the sets that go down with age: partly a general upward shift, not a specific reversal.
+# - **GO BP (supplement, tables above):** 382 / 444 / 309 of ~3,700 terms are significant (aging / aDR / YMP), too many to read one by one, which is why GO BP only names specific processes. Of the terms used on the current slides, these hold: aging: complement activation, antigen presentation, macrophage activation, neuroinflammatory response, synapse pruning up, oxidative phosphorylation down; aDR: circadian rhythm and oxidative phosphorylation up, myelin terms (ensheathment of neurons, myelin assembly, oligodendrocyte differentiation) down; YMP: the same myelin terms up. Not significant: astrocyte activation, sterol biosynthesis, response to starvation, sprouting angiogenesis, response to type I interferon.
+# - **Myelin terms:** not changed with aging, so their opposite shifts after aDR and YMP are not a reversal of aging. They can also reflect how much white matter each tissue punch contained.
 # - **Caution:** gene sets share genes, so these counts are not independent pieces of evidence, and the counting table is descriptive (no test).
 
 # ====================================================================================================
@@ -412,10 +435,11 @@ cmp %>% filter(both_DEG) %>% transmute(intervention = panel, symbol, aging = rou
 # | Filter ≥ 10 reads in the smallest-group size; Wald test; padj < 0.05, `alpha = 0.05`; no fold-change cutoff | team setup |
 # | apeglm-shrunken log2FC for plots and comparisons | stable fold changes for low-count genes |
 # | Hallmark GSEA on the Wald statistic | uses all tested genes, not only DEGs |
+# | GO BP as supplement only (same GSEA) | names specific processes (e.g. myelin, circadian); thousands of overlapping terms are not a summary |
 # | No test of the % opposite | aging genes are not independent |
-# | Removed from the original notebook | correlation clustering, expression histograms, 21 vs 18 month analysis, aDR / YMP heatmaps, GO BP, camera, permutation and binomial tests, alternative aging signatures, cell-type scores, GO of reversed genes (details in `CHANGES.md`) |
+# | Removed from the original notebook | correlation clustering, expression histograms, 21 vs 18 month analysis, aDR / YMP heatmaps, GO BP figures (GO BP kept as a supplementary table), camera, permutation and binomial tests, alternative aging signatures, cell-type scores, GO of reversed genes (details in `CHANGES.md`) |
 #
-# **Still to decide as a group:** see `HANDOVER.md` (GO BP as supplementary table, DEG fold-change cutoff on the slides, who presents what).
+# **Still to decide as a group:** see `HANDOVER.md` (DEG fold-change cutoff on the slides, wording of the myelin results, who presents what).
 # ====================================================================================================
 
 # Software versions (reproducibility)
