@@ -1,3 +1,3 @@
-intervention,aging_DEGs,compared,spearman_rho,pct_opposite,DEG_in_both,both_opposite,both_same
-aDR,175,175,0.13,50.9,5,0,5
-YMP,175,175,-0.09,62.3,2,2,0
+intervention,aging_DEGs,compared,spearman_rho,pct_opposite,median_abs_lfc_aging,median_abs_lfc_int,DEG_in_both,both_opposite,both_same
+aDR,175,175,0.13,50.9,0.7,0.01,5,0,5
+YMP,175,175,-0.09,62.3,0.7,0.01,2,2,0
