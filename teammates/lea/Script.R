@@ -3,7 +3,7 @@
 # ====================================================================================================
 # # Aging and rejuvenating interventions in the mouse cerebellum
 #
-# > **Proposed common baseline for review, not final.** Lea's notebook reduced to the team's agreed setup. Changes: `CHANGES.md`. Results, open decisions, slide check: `HANDOVER.md`.
+# > **Proposed common baseline for review, not final.** Lea's notebook reduced to the team's agreed setup. Results, changes from Lea's original, open decisions and slide check: `README.md`.
 #
 # **Question:** how does the cerebellum change with age, what do dietary restriction (aDR) and young plasma (YMP) change, and does either move the aging changes back?
 #
