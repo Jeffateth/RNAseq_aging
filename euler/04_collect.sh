@@ -22,4 +22,6 @@ tar czf kallisto_results.tar.gz --transform 's,^kallisto_M39/,kallisto/,' kallis
 tar czf rsem_results.tar.gz --transform 's,^rsem_M39/,rsem/,' rsem_M39/*/*.genes.results
 tar czf qc_results.tar.gz qc/raw/*_fastqc.zip qc/*.fastp.json qc/*.fastp.html
 [[ -d qc/trimmed ]] && tar czf qc_trimmed_results.tar.gz qc/trimmed/*_fastqc.zip
+# trim_check_results.tar.gz  trim_check/<SRR>/<arm>/Log.final.out + the fastp report (06_trim_check.sh); only if that check was run
+[[ -d trim_check_M39 ]] && tar czf trim_check_results.tar.gz --transform 's,^trim_check_M39/,trim_check/,' trim_check_M39/*/*/Log.final.out trim_check_M39/*/*.fastp.json
 ls -lh *_results.tar.gz
